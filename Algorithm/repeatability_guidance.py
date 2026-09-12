@@ -166,12 +166,26 @@ class RepeatabilityGuidance:
         return {name: score.clone() for name, score in self._scores.items()}
 
 
-def sampling_weights_from_scores(scores, strength):
-    """Convert q scores to positive soft reset weights ``1 + strength*q``."""
-    strength = float(strength)
-    if strength < 0:
-        raise ValueError("rg_strength must be non-negative")
-    return {
-        name: 1.0 + strength * torch.as_tensor(score, dtype=torch.float64)
-        for name, score in scores.items()
-    }
+def sampling_weights_from_scores(scores, mix, epsilon=1e-12):
+    """Mix uniform reset placement with normalized repeatability scores.
+
+    The returned tensors sum to one and are used as relative weights by the
+    task-private weighted sampler.  A layer with no positive score follows the
+    exact uniform FedPhoenix path.
+    """
+    mix = float(mix)
+    if not 0.0 <= mix <= 1.0:
+        raise ValueError("rg_mix must be in [0, 1]")
+    weights = {}
+    for name, raw_score in scores.items():
+        score = torch.as_tensor(raw_score, dtype=torch.float64).clamp_min(0.0)
+        if score.numel() == 0:
+            raise ValueError("repeatability score tensors must be non-empty")
+        uniform = torch.full_like(score, 1.0 / score.numel())
+        total = score.sum()
+        if not torch.isfinite(total) or float(total) <= float(epsilon):
+            probability = uniform
+        else:
+            probability = (1.0 - mix) * uniform + mix * (score / total)
+        weights[name] = probability
+    return weights

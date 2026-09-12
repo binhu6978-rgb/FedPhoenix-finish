@@ -345,8 +345,8 @@ def FedPhoenixRG(
     """FedPhoenix with cross-round repeatability-guided reset placement."""
     if args.rg_interval < 2:
         raise ValueError("rg_interval must be at least 2")
-    if args.rg_strength < 0:
-        raise ValueError("rg_strength must be non-negative")
+    if not 0.0 <= args.rg_mix <= 1.0:
+        raise ValueError("rg_mix must be in [0, 1]")
 
     net_glob.train()
     acc = []
@@ -401,7 +401,7 @@ def FedPhoenixRG(
         if (iter + 1) % args.rg_interval == 0:
             scores = guidance.finalize_window()
             sampling_weights = sampling_weights_from_scores(
-                scores, args.rg_strength
+                scores, args.rg_mix
             )
             for layer_name, score in scores.items():
                 weights = sampling_weights[layer_name]
@@ -409,12 +409,20 @@ def FedPhoenixRG(
                 entropy = float(
                     -(probability * probability.clamp_min(1e-300).log()).sum()
                 )
+                uniform_probability = 1.0 / probability.numel()
+                uniform_entropy = math.log(probability.numel())
                 print(
                     f"RG_SCORE round={iter + 1} layer={layer_name} "
                     f"mean_q={float(score.double().mean()):.6f} "
                     f"max_q={float(score.max()):.6f} "
                     f"fraction_q_positive={float((score > 0).double().mean()):.6f} "
-                    f"sampling_entropy={entropy:.6f}",
+                    f"sampling_entropy={entropy:.6f} "
+                    f"uniform_entropy={uniform_entropy:.6f} "
+                    f"entropy_gap={uniform_entropy - entropy:.6f} "
+                    f"max_probability_over_uniform="
+                    f"{float(probability.max() / uniform_probability):.6f} "
+                    f"min_probability_over_uniform="
+                    f"{float(probability.min() / uniform_probability):.6f}",
                     flush=True,
                 )
             guidance.reset_window()

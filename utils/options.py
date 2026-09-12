@@ -182,8 +182,8 @@ def args_parser():
     # FedPhoenixRG: soft repeatability guidance for reset placement
     parser.add_argument("--rg_interval", type=int, default=20,
                         help="rounds per repeatability scoring window")
-    parser.add_argument("--rg_strength", type=float, default=1.0,
-                        help="soft reset-weight strength: w = 1 + strength * q")
+    parser.add_argument("--rg_mix", type=float, default=0.5,
+                        help="uniform/repeatability reset-probability mixture in [0, 1]")
 
     args = parser.parse_args()
     return args

@@ -102,7 +102,7 @@ def _run(method, initial_state, monkeypatch):
         device=torch.device("cpu"),
         algorithm=method,
         rg_interval=20,
-        rg_strength=1.0,
+        rg_mix=0.5,
         dataset="synthetic",
         model="tiny",
         run_name="",

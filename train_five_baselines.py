@@ -67,7 +67,7 @@ def parse_args():
                         help="memmap keeps the ~11 GB of VGG observations on disk")
     parser.add_argument("--crsi-dry-run", type=int, default=0, choices=[0, 1])
     parser.add_argument("--rg-interval", type=int, default=20)
-    parser.add_argument("--rg-strength", type=float, default=1.0)
+    parser.add_argument("--rg-mix", type=float, default=0.5)
     parser.add_argument("--gpu", type=int, default=0)
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--dry-run", action="store_true")
@@ -152,7 +152,7 @@ def method_specific_flags(method, args):
     if method == "FedPhoenixRG":
         return [
             "--rg_interval", str(args.rg_interval),
-            "--rg_strength", str(args.rg_strength),
+            "--rg_mix", str(args.rg_mix),
         ]
     if method != "FedCRSI":
         return []
@@ -241,7 +241,7 @@ def main():
             },
             "fedphoenix_rg": {
                 "interval": args.rg_interval,
-                "strength": args.rg_strength,
+                "mix": args.rg_mix,
                 "reset_ratio": 0.015625,
                 "conv_transition_rounds": 1000,
                 "reset_method": "ori_normal",

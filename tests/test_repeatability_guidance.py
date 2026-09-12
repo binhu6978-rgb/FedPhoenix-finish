@@ -4,7 +4,10 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from Algorithm.repeatability_guidance import RepeatabilityGuidance
+from Algorithm.repeatability_guidance import (
+    RepeatabilityGuidance,
+    sampling_weights_from_scores,
+)
 
 
 def _model(filters=2):
@@ -100,3 +103,20 @@ def test_guidance_does_not_change_global_random_streams():
     np.testing.assert_array_equal(numpy_after[1], numpy_before[1])
     assert numpy_after[2:] == numpy_before[2:]
     assert torch.equal(torch.get_rng_state(), torch_before)
+
+
+def test_mixture_probabilities_are_normalized_and_nonnegative():
+    score = torch.tensor([0.0, 1.0, 3.0, 0.0])
+    probability = sampling_weights_from_scores({"layer": score}, 0.5)["layer"]
+    expected = 0.5 * torch.full((4,), 0.25, dtype=torch.float64)
+    expected += 0.5 * score.double() / score.sum()
+    assert torch.allclose(probability, expected)
+    assert torch.isclose(probability.sum(), torch.tensor(1.0, dtype=torch.float64))
+    assert bool((probability >= 0).all())
+
+
+def test_zero_scores_fall_back_to_uniform_probabilities():
+    probability = sampling_weights_from_scores(
+        {"layer": torch.zeros(5)}, 0.75
+    )["layer"]
+    assert torch.equal(probability, torch.full((5,), 0.2, dtype=torch.float64))
