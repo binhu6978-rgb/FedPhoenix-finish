@@ -32,6 +32,7 @@ from utils.utils import save_result,save_model
 from Algorithm.Training_FedGen import FedGen
 
 from Algorithm.Training_FedMut import FedMut
+from Algorithm.Training_FedCRSI import FedCRSI
 from Algorithm.RecoveryAware import (
     build_recovery_score_matrix,
     confidence_gate_assignment,
@@ -898,6 +899,8 @@ if __name__ == '__main__':
         FedGen(args, net_glob, dataset_train, dataset_final_test, dict_users)
     elif args.algorithm == 'FedMut':
         FedMut(args, net_glob, dataset_train, dataset_final_test, dict_users)
+    elif args.algorithm == 'FedCRSI':
+        FedCRSI(args, net_glob, dataset_train, dataset_final_test, dict_users)
     elif args.algorithm == 'FedPhoenix':
         FedPhoenix(
             net_glob,

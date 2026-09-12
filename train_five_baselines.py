@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import hashlib
 import json
 import os
 import subprocess
@@ -34,7 +35,9 @@ ALIASES = {
     "FedMut": "FedMut",
     "FedGen": "FedGen",
     "FedPhoenix": "FedPhoenix",
+    "FedCRSI": "FedCRSI",
 }
+PARTITION_FILE = os.path.join("data", "cifar10_100_noniidCase5_beta0.3.json")
 
 
 def parse_args():
@@ -49,6 +52,19 @@ def parse_args():
         help="methods to run in order; CluSample aliases ClusteredSampling",
     )
     parser.add_argument("--epochs", type=int, default=1200)
+    parser.add_argument(
+        "--model",
+        default="resnet18",
+        choices=["resnet18", "vgg"],
+        help="shared backbone; 'vgg' is the VGG16 protocol of result_other_method/",
+    )
+    parser.add_argument("--crsi-interval", type=int, default=20)
+    parser.add_argument("--crsi-null-draws", type=int, default=19)
+    parser.add_argument("--crsi-null-alpha", type=float, default=0.05)
+    parser.add_argument("--crsi-store-backend", default="ram",
+                        choices=["ram", "memmap"],
+                        help="memmap keeps the ~11 GB of VGG observations on disk")
+    parser.add_argument("--crsi-dry-run", type=int, default=0, choices=[0, 1])
     parser.add_argument("--gpu", type=int, default=0)
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--dry-run", action="store_true")
@@ -78,7 +94,7 @@ def build_command(method, args):
         "--dataset",
         "cifar10",
         "--model",
-        "resnet18",
+        args.model,
         "--epochs",
         str(args.epochs),
         "--num_users",
@@ -125,6 +141,22 @@ def build_command(method, args):
         str(args.gpu),
         "--run_name",
         f"original_{method}_seed{args.seed}_{args.epochs}",
+    ] + (method_specific_flags(method, args))
+
+
+def method_specific_flags(method, args):
+    """Only the proposed method receives extra flags; baselines are untouched."""
+    if method != "FedCRSI":
+        return []
+    # store dtype is deliberately not exposed: reported runs use float32
+    return [
+        "--crsi_interval", str(args.crsi_interval),
+        "--crsi_null", "signflip",
+        "--crsi_null_draws", str(args.crsi_null_draws),
+        "--crsi_null_alpha", str(args.crsi_null_alpha),
+        "--crsi_store_dtype", "float32",
+        "--crsi_store_backend", args.crsi_store_backend,
+        "--crsi_dry_run", str(args.crsi_dry_run),
     ]
 
 
@@ -146,6 +178,21 @@ def main():
             print(subprocess.list2cmdline(command))
         return 0
 
+    partition_path = os.path.join(ROOT, PARTITION_FILE)
+    if not os.path.isfile(partition_path):
+        print(
+            f"Missing client partition {PARTITION_FILE}. All methods use "
+            "--generate_data 0 and must read the same fixed Dirichlet split; "
+            "copy it from the FedPhoenix-new repository (do NOT regenerate).",
+            file=sys.stderr,
+        )
+        return 2
+    digest = hashlib.sha256()
+    with open(partition_path, "rb") as handle:
+        for block in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(block)
+    partition_sha256 = digest.hexdigest()
+    print(f"Client partition {PARTITION_FILE} sha256={partition_sha256}")
     os.makedirs(log_dir, exist_ok=False)
     manifest_path = os.path.join(log_dir, "manifest.json")
     manifest = {
@@ -155,7 +202,7 @@ def main():
         "started_at": dt.datetime.now().isoformat(timespec="seconds"),
         "shared_protocol": {
             "dataset": "cifar10",
-            "model": "resnet18",
+            "model": args.model,
             "epochs": args.epochs,
             "num_users": 100,
             "participation": 0.1,
@@ -173,6 +220,17 @@ def main():
             "fedphoenix_reset_method": "ori_normal",
             "seed": args.seed,
             "gpu": args.gpu,
+            "partition_file": PARTITION_FILE,
+            "partition_sha256": partition_sha256,
+            "fedcrsi": {
+                "interval": args.crsi_interval,
+                "null": "signflip",
+                "null_draws": args.crsi_null_draws,
+                "null_alpha": args.crsi_null_alpha,
+                "store_dtype": "float32",
+                "store_backend": args.crsi_store_backend,
+                "dry_run": args.crsi_dry_run,
+            },
             "evaluation": (
                 "original per-method evaluation loop on the complete 10000-sample "
                 "CIFAR-10 server test set"

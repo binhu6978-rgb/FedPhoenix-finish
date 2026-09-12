@@ -149,5 +149,35 @@ def args_parser():
         ),
     )
 
+    # FedCRSI: Cross-Round Repeatability Diagnosis + Subspace-Selective Intervention
+    parser.add_argument("--crsi_interval", type=int, default=20,
+                        help="diagnosis interval length L (rounds per anchor stage)")
+    parser.add_argument("--crsi_null", type=str, default="signflip",
+                        choices=["signflip", "permutation"],
+                        help="finite-sample null; 'permutation' is an Appendix ablation "
+                             "and is anti-conservative under heterogeneous clients")
+    parser.add_argument("--crsi_null_draws", type=int, default=19,
+                        help="null draws B for the null spectral level")
+    parser.add_argument("--crsi_null_alpha", type=float, default=0.05,
+                        help="level of the Monte Carlo null test; needs (B+1)*alpha >= 1")
+    parser.add_argument("--crsi_store_dtype", type=str, default="float32",
+                        choices=["float32", "float16"],
+                        help="storage precision of the deviations; float16 is an "
+                             "approximate variant, not an equivalent optimisation")
+    parser.add_argument("--crsi_store_backend", type=str, default="ram",
+                        choices=["ram", "memmap"],
+                        help="where the interval's observations live; memmap trades "
+                             "host memory for disk at identical arithmetic")
+    parser.add_argument("--crsi_cache_dir", type=str, default="",
+                        help="parent directory for the memmap cache; empty = system temp")
+    parser.add_argument("--crsi_workers", type=int, default=0,
+                        help="threads for the small spectral problems; 0 = auto (engineering)")
+    parser.add_argument("--crsi_chunk_mb", type=int, default=1024,
+                        help="working-memory budget per filter chunk (engineering)")
+    parser.add_argument("--crsi_dry_run", type=int, default=0, choices=[0, 1],
+                        help="1 = run the diagnosis and log it without changing parameters")
+    parser.add_argument("--crsi_log_dir", type=str, default="results/crsi_diagnostics",
+                        help="directory for per-interval diagnosis records")
+
     args = parser.parse_args()
     return args

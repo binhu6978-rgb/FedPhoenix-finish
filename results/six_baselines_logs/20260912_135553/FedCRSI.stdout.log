@@ -1,0 +1,853 @@
+Client partition: 100 clients, min=30, max=1447, mean=500.00, std=220.72
+Evaluation protocol: full server test set evaluated every round (10000 samples).
+VGG16(
+  (features): Sequential(
+    (0): Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (2): ReLU(inplace=True)
+    (3): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (5): ReLU(inplace=True)
+    (6): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (7): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (8): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (9): ReLU(inplace=True)
+    (10): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (11): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (12): ReLU(inplace=True)
+    (13): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (14): Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (15): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (16): ReLU(inplace=True)
+    (17): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (18): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (19): ReLU(inplace=True)
+    (20): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (21): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (22): ReLU(inplace=True)
+    (23): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (24): Conv2d(256, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (25): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (26): ReLU(inplace=True)
+    (27): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (28): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (29): ReLU(inplace=True)
+    (30): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (31): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (32): ReLU(inplace=True)
+    (33): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (34): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (35): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (36): ReLU(inplace=True)
+    (37): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (38): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (39): ReLU(inplace=True)
+    (40): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (41): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (42): ReLU(inplace=True)
+    (43): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (44): AdaptiveAvgPool2d(output_size=(1, 1))
+  )
+  (classifier): Sequential(
+    (0): Linear(in_features=512, out_features=4096, bias=True)
+    (1): ReLU(inplace=True)
+    (2): Dropout(p=0.5, inplace=False)
+    (3): Linear(in_features=4096, out_features=4096, bias=True)
+    (4): ReLU(inplace=True)
+    (5): Dropout(p=0.5, inplace=False)
+  )
+  (fc): Linear(in_features=4096, out_features=10, bias=True)
+)
+FedCRSI: 13 conv layers, 4224 filters, interval=20, null=signflip B=19 alpha=0.05, store=200 obs x 56.1 MB (11.0 GB, ram), workers=8, dry_run=False
+PARTITION path=C:\Users\admin\Desktop\need_do\new_paper_four\FedPhoenix-finish\data\cifar10_100_noniidCase5_beta0.3.json sha256=ffa71f5432b8905bf13117d30fe3c981090aa3fa1e93e0a1c179be4f8bb5d882
+********************************************************************************
+Round   0
+ROUND_ACCURACY method=FedCRSI round=1 accuracy=10.100000
+********************************************************************************
+Round   1
+ROUND_ACCURACY method=FedCRSI round=2 accuracy=12.740000
+********************************************************************************
+Round   2
+ROUND_ACCURACY method=FedCRSI round=3 accuracy=14.130000
+********************************************************************************
+Round   3
+ROUND_ACCURACY method=FedCRSI round=4 accuracy=21.100000
+********************************************************************************
+Round   4
+ROUND_ACCURACY method=FedCRSI round=5 accuracy=39.200001
+********************************************************************************
+Round   5
+ROUND_ACCURACY method=FedCRSI round=6 accuracy=25.530001
+********************************************************************************
+Round   6
+ROUND_ACCURACY method=FedCRSI round=7 accuracy=35.860001
+********************************************************************************
+Round   7
+ROUND_ACCURACY method=FedCRSI round=8 accuracy=27.450001
+********************************************************************************
+Round   8
+ROUND_ACCURACY method=FedCRSI round=9 accuracy=37.450001
+********************************************************************************
+Round   9
+ROUND_ACCURACY method=FedCRSI round=10 accuracy=33.250000
+********************************************************************************
+Round  10
+ROUND_ACCURACY method=FedCRSI round=11 accuracy=45.340000
+********************************************************************************
+Round  11
+ROUND_ACCURACY method=FedCRSI round=12 accuracy=40.439999
+********************************************************************************
+Round  12
+ROUND_ACCURACY method=FedCRSI round=13 accuracy=44.630001
+********************************************************************************
+Round  13
+ROUND_ACCURACY method=FedCRSI round=14 accuracy=48.480000
+********************************************************************************
+Round  14
+ROUND_ACCURACY method=FedCRSI round=15 accuracy=47.860001
+********************************************************************************
+Round  15
+ROUND_ACCURACY method=FedCRSI round=16 accuracy=51.560001
+********************************************************************************
+Round  16
+ROUND_ACCURACY method=FedCRSI round=17 accuracy=50.029999
+********************************************************************************
+Round  17
+ROUND_ACCURACY method=FedCRSI round=18 accuracy=39.619999
+********************************************************************************
+Round  18
+ROUND_ACCURACY method=FedCRSI round=19 accuracy=47.450001
+********************************************************************************
+Round  19
+CRSI_INTERVENTION round=20 repeat_clients=61 pairs=193 filters_with_subspace=1429/4224 removed_fraction=0.0111 applied=1 seconds=435.9
+ROUND_ACCURACY method=FedCRSI round=20 accuracy=47.430000
+********************************************************************************
+Round  20
+ROUND_ACCURACY method=FedCRSI round=21 accuracy=53.840000
+********************************************************************************
+Round  21
+ROUND_ACCURACY method=FedCRSI round=22 accuracy=59.320000
+********************************************************************************
+Round  22
+ROUND_ACCURACY method=FedCRSI round=23 accuracy=51.619999
+********************************************************************************
+Round  23
+ROUND_ACCURACY method=FedCRSI round=24 accuracy=54.660000
+********************************************************************************
+Round  24
+ROUND_ACCURACY method=FedCRSI round=25 accuracy=57.799999
+********************************************************************************
+Round  25
+ROUND_ACCURACY method=FedCRSI round=26 accuracy=54.630001
+********************************************************************************
+Round  26
+ROUND_ACCURACY method=FedCRSI round=27 accuracy=54.270000
+********************************************************************************
+Round  27
+ROUND_ACCURACY method=FedCRSI round=28 accuracy=54.049999
+********************************************************************************
+Round  28
+ROUND_ACCURACY method=FedCRSI round=29 accuracy=51.279999
+********************************************************************************
+Round  29
+ROUND_ACCURACY method=FedCRSI round=30 accuracy=56.230000
+********************************************************************************
+Round  30
+ROUND_ACCURACY method=FedCRSI round=31 accuracy=58.700001
+********************************************************************************
+Round  31
+ROUND_ACCURACY method=FedCRSI round=32 accuracy=59.139999
+********************************************************************************
+Round  32
+ROUND_ACCURACY method=FedCRSI round=33 accuracy=58.770000
+********************************************************************************
+Round  33
+ROUND_ACCURACY method=FedCRSI round=34 accuracy=66.199997
+********************************************************************************
+Round  34
+ROUND_ACCURACY method=FedCRSI round=35 accuracy=53.810001
+********************************************************************************
+Round  35
+ROUND_ACCURACY method=FedCRSI round=36 accuracy=56.950001
+********************************************************************************
+Round  36
+ROUND_ACCURACY method=FedCRSI round=37 accuracy=64.410004
+********************************************************************************
+Round  37
+ROUND_ACCURACY method=FedCRSI round=38 accuracy=60.380001
+********************************************************************************
+Round  38
+ROUND_ACCURACY method=FedCRSI round=39 accuracy=59.639999
+********************************************************************************
+Round  39
+CRSI_INTERVENTION round=40 repeat_clients=68 pairs=188 filters_with_subspace=1958/4224 removed_fraction=0.0118 applied=1 seconds=497.0
+ROUND_ACCURACY method=FedCRSI round=40 accuracy=64.239998
+********************************************************************************
+Round  40
+ROUND_ACCURACY method=FedCRSI round=41 accuracy=66.309998
+********************************************************************************
+Round  41
+ROUND_ACCURACY method=FedCRSI round=42 accuracy=61.820000
+********************************************************************************
+Round  42
+ROUND_ACCURACY method=FedCRSI round=43 accuracy=60.950001
+********************************************************************************
+Round  43
+ROUND_ACCURACY method=FedCRSI round=44 accuracy=62.570000
+********************************************************************************
+Round  44
+ROUND_ACCURACY method=FedCRSI round=45 accuracy=55.480000
+********************************************************************************
+Round  45
+ROUND_ACCURACY method=FedCRSI round=46 accuracy=66.480003
+********************************************************************************
+Round  46
+ROUND_ACCURACY method=FedCRSI round=47 accuracy=64.010002
+********************************************************************************
+Round  47
+ROUND_ACCURACY method=FedCRSI round=48 accuracy=63.639999
+********************************************************************************
+Round  48
+ROUND_ACCURACY method=FedCRSI round=49 accuracy=61.910000
+********************************************************************************
+Round  49
+ROUND_ACCURACY method=FedCRSI round=50 accuracy=62.380001
+********************************************************************************
+Round  50
+ROUND_ACCURACY method=FedCRSI round=51 accuracy=59.279999
+********************************************************************************
+Round  51
+ROUND_ACCURACY method=FedCRSI round=52 accuracy=64.510002
+********************************************************************************
+Round  52
+ROUND_ACCURACY method=FedCRSI round=53 accuracy=64.150002
+********************************************************************************
+Round  53
+ROUND_ACCURACY method=FedCRSI round=54 accuracy=52.720001
+********************************************************************************
+Round  54
+ROUND_ACCURACY method=FedCRSI round=55 accuracy=66.800003
+********************************************************************************
+Round  55
+ROUND_ACCURACY method=FedCRSI round=56 accuracy=65.059998
+********************************************************************************
+Round  56
+ROUND_ACCURACY method=FedCRSI round=57 accuracy=62.189999
+********************************************************************************
+Round  57
+ROUND_ACCURACY method=FedCRSI round=58 accuracy=42.680000
+********************************************************************************
+Round  58
+ROUND_ACCURACY method=FedCRSI round=59 accuracy=63.189999
+********************************************************************************
+Round  59
+CRSI_INTERVENTION round=60 repeat_clients=61 pairs=181 filters_with_subspace=2420/4224 removed_fraction=0.0349 applied=1 seconds=419.0
+ROUND_ACCURACY method=FedCRSI round=60 accuracy=63.049999
+********************************************************************************
+Round  60
+ROUND_ACCURACY method=FedCRSI round=61 accuracy=67.379997
+********************************************************************************
+Round  61
+ROUND_ACCURACY method=FedCRSI round=62 accuracy=64.949997
+********************************************************************************
+Round  62
+ROUND_ACCURACY method=FedCRSI round=63 accuracy=66.860001
+********************************************************************************
+Round  63
+ROUND_ACCURACY method=FedCRSI round=64 accuracy=64.400002
+********************************************************************************
+Round  64
+ROUND_ACCURACY method=FedCRSI round=65 accuracy=65.089996
+********************************************************************************
+Round  65
+ROUND_ACCURACY method=FedCRSI round=66 accuracy=64.440002
+********************************************************************************
+Round  66
+ROUND_ACCURACY method=FedCRSI round=67 accuracy=64.650002
+********************************************************************************
+Round  67
+ROUND_ACCURACY method=FedCRSI round=68 accuracy=59.110001
+********************************************************************************
+Round  68
+ROUND_ACCURACY method=FedCRSI round=69 accuracy=69.290001
+********************************************************************************
+Round  69
+ROUND_ACCURACY method=FedCRSI round=70 accuracy=63.660000
+********************************************************************************
+Round  70
+ROUND_ACCURACY method=FedCRSI round=71 accuracy=60.939999
+********************************************************************************
+Round  71
+ROUND_ACCURACY method=FedCRSI round=72 accuracy=66.519997
+********************************************************************************
+Round  72
+ROUND_ACCURACY method=FedCRSI round=73 accuracy=67.750000
+********************************************************************************
+Round  73
+ROUND_ACCURACY method=FedCRSI round=74 accuracy=67.620003
+********************************************************************************
+Round  74
+ROUND_ACCURACY method=FedCRSI round=75 accuracy=71.889999
+********************************************************************************
+Round  75
+ROUND_ACCURACY method=FedCRSI round=76 accuracy=61.619999
+********************************************************************************
+Round  76
+ROUND_ACCURACY method=FedCRSI round=77 accuracy=65.099998
+********************************************************************************
+Round  77
+ROUND_ACCURACY method=FedCRSI round=78 accuracy=67.370003
+********************************************************************************
+Round  78
+ROUND_ACCURACY method=FedCRSI round=79 accuracy=67.480003
+********************************************************************************
+Round  79
+CRSI_INTERVENTION round=80 repeat_clients=62 pairs=182 filters_with_subspace=3276/4224 removed_fraction=0.0209 applied=1 seconds=461.5
+ROUND_ACCURACY method=FedCRSI round=80 accuracy=68.760002
+********************************************************************************
+Round  80
+ROUND_ACCURACY method=FedCRSI round=81 accuracy=64.919998
+********************************************************************************
+Round  81
+ROUND_ACCURACY method=FedCRSI round=82 accuracy=65.959999
+********************************************************************************
+Round  82
+ROUND_ACCURACY method=FedCRSI round=83 accuracy=68.010002
+********************************************************************************
+Round  83
+ROUND_ACCURACY method=FedCRSI round=84 accuracy=64.300003
+********************************************************************************
+Round  84
+ROUND_ACCURACY method=FedCRSI round=85 accuracy=66.209999
+********************************************************************************
+Round  85
+ROUND_ACCURACY method=FedCRSI round=86 accuracy=66.040001
+********************************************************************************
+Round  86
+ROUND_ACCURACY method=FedCRSI round=87 accuracy=67.519997
+********************************************************************************
+Round  87
+ROUND_ACCURACY method=FedCRSI round=88 accuracy=68.589996
+********************************************************************************
+Round  88
+ROUND_ACCURACY method=FedCRSI round=89 accuracy=71.099998
+********************************************************************************
+Round  89
+ROUND_ACCURACY method=FedCRSI round=90 accuracy=69.269997
+********************************************************************************
+Round  90
+ROUND_ACCURACY method=FedCRSI round=91 accuracy=69.230003
+********************************************************************************
+Round  91
+ROUND_ACCURACY method=FedCRSI round=92 accuracy=67.730003
+********************************************************************************
+Round  92
+ROUND_ACCURACY method=FedCRSI round=93 accuracy=65.459999
+********************************************************************************
+Round  93
+ROUND_ACCURACY method=FedCRSI round=94 accuracy=69.330002
+********************************************************************************
+Round  94
+ROUND_ACCURACY method=FedCRSI round=95 accuracy=69.279999
+********************************************************************************
+Round  95
+ROUND_ACCURACY method=FedCRSI round=96 accuracy=67.760002
+********************************************************************************
+Round  96
+ROUND_ACCURACY method=FedCRSI round=97 accuracy=66.379997
+********************************************************************************
+Round  97
+ROUND_ACCURACY method=FedCRSI round=98 accuracy=64.620003
+********************************************************************************
+Round  98
+ROUND_ACCURACY method=FedCRSI round=99 accuracy=63.970001
+********************************************************************************
+Round  99
+CRSI_INTERVENTION round=100 repeat_clients=62 pairs=204 filters_with_subspace=3243/4224 removed_fraction=0.0222 applied=1 seconds=484.5
+ROUND_ACCURACY method=FedCRSI round=100 accuracy=69.720001
+********************************************************************************
+Round 100
+ROUND_ACCURACY method=FedCRSI round=101 accuracy=69.620003
+********************************************************************************
+Round 101
+ROUND_ACCURACY method=FedCRSI round=102 accuracy=71.900002
+********************************************************************************
+Round 102
+ROUND_ACCURACY method=FedCRSI round=103 accuracy=71.440002
+********************************************************************************
+Round 103
+ROUND_ACCURACY method=FedCRSI round=104 accuracy=70.129997
+********************************************************************************
+Round 104
+ROUND_ACCURACY method=FedCRSI round=105 accuracy=70.300003
+********************************************************************************
+Round 105
+ROUND_ACCURACY method=FedCRSI round=106 accuracy=67.309998
+********************************************************************************
+Round 106
+ROUND_ACCURACY method=FedCRSI round=107 accuracy=56.049999
+********************************************************************************
+Round 107
+ROUND_ACCURACY method=FedCRSI round=108 accuracy=68.510002
+********************************************************************************
+Round 108
+ROUND_ACCURACY method=FedCRSI round=109 accuracy=70.790001
+********************************************************************************
+Round 109
+ROUND_ACCURACY method=FedCRSI round=110 accuracy=70.459999
+********************************************************************************
+Round 110
+ROUND_ACCURACY method=FedCRSI round=111 accuracy=70.529999
+********************************************************************************
+Round 111
+ROUND_ACCURACY method=FedCRSI round=112 accuracy=71.180000
+********************************************************************************
+Round 112
+ROUND_ACCURACY method=FedCRSI round=113 accuracy=69.989998
+********************************************************************************
+Round 113
+ROUND_ACCURACY method=FedCRSI round=114 accuracy=67.199997
+********************************************************************************
+Round 114
+ROUND_ACCURACY method=FedCRSI round=115 accuracy=61.459999
+********************************************************************************
+Round 115
+ROUND_ACCURACY method=FedCRSI round=116 accuracy=71.769997
+********************************************************************************
+Round 116
+ROUND_ACCURACY method=FedCRSI round=117 accuracy=65.029999
+********************************************************************************
+Round 117
+ROUND_ACCURACY method=FedCRSI round=118 accuracy=69.430000
+********************************************************************************
+Round 118
+ROUND_ACCURACY method=FedCRSI round=119 accuracy=71.180000
+********************************************************************************
+Round 119
+CRSI_INTERVENTION round=120 repeat_clients=62 pairs=180 filters_with_subspace=1884/4224 removed_fraction=0.0182 applied=1 seconds=440.7
+ROUND_ACCURACY method=FedCRSI round=120 accuracy=70.360001
+********************************************************************************
+Round 120
+ROUND_ACCURACY method=FedCRSI round=121 accuracy=73.160004
+********************************************************************************
+Round 121
+ROUND_ACCURACY method=FedCRSI round=122 accuracy=68.070000
+********************************************************************************
+Round 122
+ROUND_ACCURACY method=FedCRSI round=123 accuracy=71.529999
+********************************************************************************
+Round 123
+ROUND_ACCURACY method=FedCRSI round=124 accuracy=61.660000
+********************************************************************************
+Round 124
+ROUND_ACCURACY method=FedCRSI round=125 accuracy=63.439999
+********************************************************************************
+Round 125
+ROUND_ACCURACY method=FedCRSI round=126 accuracy=63.340000
+********************************************************************************
+Round 126
+ROUND_ACCURACY method=FedCRSI round=127 accuracy=70.220001
+********************************************************************************
+Round 127
+ROUND_ACCURACY method=FedCRSI round=128 accuracy=68.940002
+********************************************************************************
+Round 128
+ROUND_ACCURACY method=FedCRSI round=129 accuracy=71.940002
+********************************************************************************
+Round 129
+ROUND_ACCURACY method=FedCRSI round=130 accuracy=66.519997
+********************************************************************************
+Round 130
+ROUND_ACCURACY method=FedCRSI round=131 accuracy=66.199997
+********************************************************************************
+Round 131
+ROUND_ACCURACY method=FedCRSI round=132 accuracy=73.269997
+********************************************************************************
+Round 132
+ROUND_ACCURACY method=FedCRSI round=133 accuracy=68.989998
+********************************************************************************
+Round 133
+ROUND_ACCURACY method=FedCRSI round=134 accuracy=71.400002
+********************************************************************************
+Round 134
+ROUND_ACCURACY method=FedCRSI round=135 accuracy=68.150002
+********************************************************************************
+Round 135
+ROUND_ACCURACY method=FedCRSI round=136 accuracy=64.739998
+********************************************************************************
+Round 136
+ROUND_ACCURACY method=FedCRSI round=137 accuracy=72.239998
+********************************************************************************
+Round 137
+ROUND_ACCURACY method=FedCRSI round=138 accuracy=72.459999
+********************************************************************************
+Round 138
+ROUND_ACCURACY method=FedCRSI round=139 accuracy=70.349998
+********************************************************************************
+Round 139
+CRSI_INTERVENTION round=140 repeat_clients=59 pairs=193 filters_with_subspace=1862/4224 removed_fraction=0.0138 applied=1 seconds=416.2
+ROUND_ACCURACY method=FedCRSI round=140 accuracy=72.169998
+********************************************************************************
+Round 140
+ROUND_ACCURACY method=FedCRSI round=141 accuracy=71.830002
+********************************************************************************
+Round 141
+ROUND_ACCURACY method=FedCRSI round=142 accuracy=62.040001
+********************************************************************************
+Round 142
+ROUND_ACCURACY method=FedCRSI round=143 accuracy=62.869999
+********************************************************************************
+Round 143
+ROUND_ACCURACY method=FedCRSI round=144 accuracy=71.970001
+********************************************************************************
+Round 144
+ROUND_ACCURACY method=FedCRSI round=145 accuracy=68.209999
+********************************************************************************
+Round 145
+ROUND_ACCURACY method=FedCRSI round=146 accuracy=62.290001
+********************************************************************************
+Round 146
+ROUND_ACCURACY method=FedCRSI round=147 accuracy=71.639999
+********************************************************************************
+Round 147
+ROUND_ACCURACY method=FedCRSI round=148 accuracy=70.949997
+********************************************************************************
+Round 148
+ROUND_ACCURACY method=FedCRSI round=149 accuracy=70.849998
+********************************************************************************
+Round 149
+ROUND_ACCURACY method=FedCRSI round=150 accuracy=72.680000
+********************************************************************************
+Round 150
+ROUND_ACCURACY method=FedCRSI round=151 accuracy=62.689999
+********************************************************************************
+Round 151
+ROUND_ACCURACY method=FedCRSI round=152 accuracy=57.130001
+********************************************************************************
+Round 152
+ROUND_ACCURACY method=FedCRSI round=153 accuracy=71.500000
+********************************************************************************
+Round 153
+ROUND_ACCURACY method=FedCRSI round=154 accuracy=74.160004
+********************************************************************************
+Round 154
+ROUND_ACCURACY method=FedCRSI round=155 accuracy=70.279999
+********************************************************************************
+Round 155
+ROUND_ACCURACY method=FedCRSI round=156 accuracy=70.000000
+********************************************************************************
+Round 156
+ROUND_ACCURACY method=FedCRSI round=157 accuracy=63.080002
+********************************************************************************
+Round 157
+ROUND_ACCURACY method=FedCRSI round=158 accuracy=70.650002
+********************************************************************************
+Round 158
+ROUND_ACCURACY method=FedCRSI round=159 accuracy=70.839996
+********************************************************************************
+Round 159
+CRSI_INTERVENTION round=160 repeat_clients=64 pairs=181 filters_with_subspace=1428/4224 removed_fraction=0.0112 applied=1 seconds=463.2
+ROUND_ACCURACY method=FedCRSI round=160 accuracy=72.120003
+********************************************************************************
+Round 160
+ROUND_ACCURACY method=FedCRSI round=161 accuracy=72.000000
+********************************************************************************
+Round 161
+ROUND_ACCURACY method=FedCRSI round=162 accuracy=69.690002
+********************************************************************************
+Round 162
+ROUND_ACCURACY method=FedCRSI round=163 accuracy=67.589996
+********************************************************************************
+Round 163
+ROUND_ACCURACY method=FedCRSI round=164 accuracy=69.879997
+********************************************************************************
+Round 164
+ROUND_ACCURACY method=FedCRSI round=165 accuracy=72.529999
+********************************************************************************
+Round 165
+ROUND_ACCURACY method=FedCRSI round=166 accuracy=72.449997
+********************************************************************************
+Round 166
+ROUND_ACCURACY method=FedCRSI round=167 accuracy=69.739998
+********************************************************************************
+Round 167
+ROUND_ACCURACY method=FedCRSI round=168 accuracy=70.320000
+********************************************************************************
+Round 168
+ROUND_ACCURACY method=FedCRSI round=169 accuracy=71.860001
+********************************************************************************
+Round 169
+ROUND_ACCURACY method=FedCRSI round=170 accuracy=69.080002
+********************************************************************************
+Round 170
+ROUND_ACCURACY method=FedCRSI round=171 accuracy=65.519997
+********************************************************************************
+Round 171
+ROUND_ACCURACY method=FedCRSI round=172 accuracy=68.589996
+********************************************************************************
+Round 172
+ROUND_ACCURACY method=FedCRSI round=173 accuracy=65.760002
+********************************************************************************
+Round 173
+ROUND_ACCURACY method=FedCRSI round=174 accuracy=67.849998
+********************************************************************************
+Round 174
+ROUND_ACCURACY method=FedCRSI round=175 accuracy=72.070000
+********************************************************************************
+Round 175
+ROUND_ACCURACY method=FedCRSI round=176 accuracy=70.019997
+********************************************************************************
+Round 176
+ROUND_ACCURACY method=FedCRSI round=177 accuracy=70.330002
+********************************************************************************
+Round 177
+ROUND_ACCURACY method=FedCRSI round=178 accuracy=69.779999
+********************************************************************************
+Round 178
+ROUND_ACCURACY method=FedCRSI round=179 accuracy=73.169998
+********************************************************************************
+Round 179
+CRSI_INTERVENTION round=180 repeat_clients=60 pairs=199 filters_with_subspace=1120/4224 removed_fraction=0.0194 applied=1 seconds=460.9
+ROUND_ACCURACY method=FedCRSI round=180 accuracy=72.209999
+********************************************************************************
+Round 180
+ROUND_ACCURACY method=FedCRSI round=181 accuracy=71.919998
+********************************************************************************
+Round 181
+ROUND_ACCURACY method=FedCRSI round=182 accuracy=62.840000
+********************************************************************************
+Round 182
+ROUND_ACCURACY method=FedCRSI round=183 accuracy=72.589996
+********************************************************************************
+Round 183
+ROUND_ACCURACY method=FedCRSI round=184 accuracy=71.330002
+********************************************************************************
+Round 184
+ROUND_ACCURACY method=FedCRSI round=185 accuracy=70.680000
+********************************************************************************
+Round 185
+ROUND_ACCURACY method=FedCRSI round=186 accuracy=69.080002
+********************************************************************************
+Round 186
+ROUND_ACCURACY method=FedCRSI round=187 accuracy=64.690002
+********************************************************************************
+Round 187
+ROUND_ACCURACY method=FedCRSI round=188 accuracy=71.650002
+********************************************************************************
+Round 188
+ROUND_ACCURACY method=FedCRSI round=189 accuracy=69.800003
+********************************************************************************
+Round 189
+ROUND_ACCURACY method=FedCRSI round=190 accuracy=70.080002
+********************************************************************************
+Round 190
+ROUND_ACCURACY method=FedCRSI round=191 accuracy=61.240002
+********************************************************************************
+Round 191
+ROUND_ACCURACY method=FedCRSI round=192 accuracy=67.959999
+********************************************************************************
+Round 192
+ROUND_ACCURACY method=FedCRSI round=193 accuracy=72.529999
+********************************************************************************
+Round 193
+ROUND_ACCURACY method=FedCRSI round=194 accuracy=71.180000
+********************************************************************************
+Round 194
+ROUND_ACCURACY method=FedCRSI round=195 accuracy=69.639999
+********************************************************************************
+Round 195
+ROUND_ACCURACY method=FedCRSI round=196 accuracy=73.570000
+********************************************************************************
+Round 196
+ROUND_ACCURACY method=FedCRSI round=197 accuracy=57.509998
+********************************************************************************
+Round 197
+ROUND_ACCURACY method=FedCRSI round=198 accuracy=69.279999
+********************************************************************************
+Round 198
+ROUND_ACCURACY method=FedCRSI round=199 accuracy=63.529999
+********************************************************************************
+Round 199
+CRSI_INTERVENTION round=200 repeat_clients=57 pairs=186 filters_with_subspace=1214/4224 removed_fraction=0.0112 applied=1 seconds=427.4
+ROUND_ACCURACY method=FedCRSI round=200 accuracy=64.190002
+********************************************************************************
+Round 200
+ROUND_ACCURACY method=FedCRSI round=201 accuracy=69.580002
+********************************************************************************
+Round 201
+ROUND_ACCURACY method=FedCRSI round=202 accuracy=71.080002
+********************************************************************************
+Round 202
+ROUND_ACCURACY method=FedCRSI round=203 accuracy=62.919998
+********************************************************************************
+Round 203
+ROUND_ACCURACY method=FedCRSI round=204 accuracy=68.480003
+********************************************************************************
+Round 204
+ROUND_ACCURACY method=FedCRSI round=205 accuracy=68.760002
+********************************************************************************
+Round 205
+ROUND_ACCURACY method=FedCRSI round=206 accuracy=72.379997
+********************************************************************************
+Round 206
+ROUND_ACCURACY method=FedCRSI round=207 accuracy=68.650002
+********************************************************************************
+Round 207
+ROUND_ACCURACY method=FedCRSI round=208 accuracy=68.730003
+********************************************************************************
+Round 208
+ROUND_ACCURACY method=FedCRSI round=209 accuracy=71.639999
+********************************************************************************
+Round 209
+ROUND_ACCURACY method=FedCRSI round=210 accuracy=71.650002
+********************************************************************************
+Round 210
+ROUND_ACCURACY method=FedCRSI round=211 accuracy=67.370003
+********************************************************************************
+Round 211
+ROUND_ACCURACY method=FedCRSI round=212 accuracy=74.760002
+********************************************************************************
+Round 212
+ROUND_ACCURACY method=FedCRSI round=213 accuracy=72.779999
+********************************************************************************
+Round 213
+ROUND_ACCURACY method=FedCRSI round=214 accuracy=73.209999
+********************************************************************************
+Round 214
+ROUND_ACCURACY method=FedCRSI round=215 accuracy=72.949997
+********************************************************************************
+Round 215
+ROUND_ACCURACY method=FedCRSI round=216 accuracy=71.650002
+********************************************************************************
+Round 216
+ROUND_ACCURACY method=FedCRSI round=217 accuracy=57.080002
+********************************************************************************
+Round 217
+ROUND_ACCURACY method=FedCRSI round=218 accuracy=73.230003
+********************************************************************************
+Round 218
+ROUND_ACCURACY method=FedCRSI round=219 accuracy=69.930000
+********************************************************************************
+Round 219
+CRSI_INTERVENTION round=220 repeat_clients=62 pairs=179 filters_with_subspace=1201/4224 removed_fraction=0.0204 applied=1 seconds=437.4
+ROUND_ACCURACY method=FedCRSI round=220 accuracy=69.750000
+********************************************************************************
+Round 220
+ROUND_ACCURACY method=FedCRSI round=221 accuracy=67.160004
+********************************************************************************
+Round 221
+ROUND_ACCURACY method=FedCRSI round=222 accuracy=65.269997
+********************************************************************************
+Round 222
+ROUND_ACCURACY method=FedCRSI round=223 accuracy=73.449997
+********************************************************************************
+Round 223
+ROUND_ACCURACY method=FedCRSI round=224 accuracy=72.309998
+********************************************************************************
+Round 224
+ROUND_ACCURACY method=FedCRSI round=225 accuracy=68.360001
+********************************************************************************
+Round 225
+ROUND_ACCURACY method=FedCRSI round=226 accuracy=68.470001
+********************************************************************************
+Round 226
+ROUND_ACCURACY method=FedCRSI round=227 accuracy=70.889999
+********************************************************************************
+Round 227
+ROUND_ACCURACY method=FedCRSI round=228 accuracy=63.000000
+********************************************************************************
+Round 228
+ROUND_ACCURACY method=FedCRSI round=229 accuracy=68.750000
+********************************************************************************
+Round 229
+ROUND_ACCURACY method=FedCRSI round=230 accuracy=73.900002
+********************************************************************************
+Round 230
+ROUND_ACCURACY method=FedCRSI round=231 accuracy=69.260002
+********************************************************************************
+Round 231
+ROUND_ACCURACY method=FedCRSI round=232 accuracy=73.430000
+********************************************************************************
+Round 232
+ROUND_ACCURACY method=FedCRSI round=233 accuracy=71.959999
+********************************************************************************
+Round 233
+ROUND_ACCURACY method=FedCRSI round=234 accuracy=66.750000
+********************************************************************************
+Round 234
+ROUND_ACCURACY method=FedCRSI round=235 accuracy=62.509998
+********************************************************************************
+Round 235
+ROUND_ACCURACY method=FedCRSI round=236 accuracy=72.750000
+********************************************************************************
+Round 236
+ROUND_ACCURACY method=FedCRSI round=237 accuracy=71.489998
+********************************************************************************
+Round 237
+ROUND_ACCURACY method=FedCRSI round=238 accuracy=70.019997
+********************************************************************************
+Round 238
+ROUND_ACCURACY method=FedCRSI round=239 accuracy=72.320000
+********************************************************************************
+Round 239
+CRSI_INTERVENTION round=240 repeat_clients=61 pairs=183 filters_with_subspace=1607/4224 removed_fraction=0.0232 applied=1 seconds=446.6
+ROUND_ACCURACY method=FedCRSI round=240 accuracy=66.519997
+********************************************************************************
+Round 240
+ROUND_ACCURACY method=FedCRSI round=241 accuracy=71.690002
+********************************************************************************
+Round 241
+ROUND_ACCURACY method=FedCRSI round=242 accuracy=73.339996
+********************************************************************************
+Round 242
+ROUND_ACCURACY method=FedCRSI round=243 accuracy=72.279999
+********************************************************************************
+Round 243
+ROUND_ACCURACY method=FedCRSI round=244 accuracy=70.379997
+********************************************************************************
+Round 244
+ROUND_ACCURACY method=FedCRSI round=245 accuracy=74.720001
+********************************************************************************
+Round 245
+ROUND_ACCURACY method=FedCRSI round=246 accuracy=74.599998
+********************************************************************************
+Round 246
+ROUND_ACCURACY method=FedCRSI round=247 accuracy=50.959999
+********************************************************************************
+Round 247
+ROUND_ACCURACY method=FedCRSI round=248 accuracy=70.769997
+********************************************************************************
+Round 248
+ROUND_ACCURACY method=FedCRSI round=249 accuracy=69.160004
+********************************************************************************
+Round 249
+ROUND_ACCURACY method=FedCRSI round=250 accuracy=72.459999
+********************************************************************************
+Round 250
+ROUND_ACCURACY method=FedCRSI round=251 accuracy=72.260002
+********************************************************************************
+Round 251
+ROUND_ACCURACY method=FedCRSI round=252 accuracy=72.500000
+********************************************************************************
+Round 252
+ROUND_ACCURACY method=FedCRSI round=253 accuracy=68.220001
+********************************************************************************
+Round 253
+ROUND_ACCURACY method=FedCRSI round=254 accuracy=68.589996
+********************************************************************************
+Round 254
+ROUND_ACCURACY method=FedCRSI round=255 accuracy=74.349998
+********************************************************************************
+Round 255
+ROUND_ACCURACY method=FedCRSI round=256 accuracy=67.269997
+********************************************************************************
+Round 256
+ROUND_ACCURACY method=FedCRSI round=257 accuracy=69.000000
+********************************************************************************
+Round 257
+ROUND_ACCURACY method=FedCRSI round=258 accuracy=69.860001
+********************************************************************************
+Round 258
+ROUND_ACCURACY method=FedCRSI round=259 accuracy=71.129997
+********************************************************************************
+Round 259
