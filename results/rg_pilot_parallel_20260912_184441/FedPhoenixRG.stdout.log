@@ -1,0 +1,1157 @@
+Client partition: 100 clients, min=30, max=1447, mean=500.00, std=220.72
+Evaluation protocol: full server test set evaluated every round (10000 samples).
+VGG16(
+  (features): Sequential(
+    (0): Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (2): ReLU(inplace=True)
+    (3): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (5): ReLU(inplace=True)
+    (6): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (7): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (8): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (9): ReLU(inplace=True)
+    (10): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (11): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (12): ReLU(inplace=True)
+    (13): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (14): Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (15): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (16): ReLU(inplace=True)
+    (17): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (18): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (19): ReLU(inplace=True)
+    (20): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (21): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (22): ReLU(inplace=True)
+    (23): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (24): Conv2d(256, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (25): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (26): ReLU(inplace=True)
+    (27): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (28): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (29): ReLU(inplace=True)
+    (30): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (31): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (32): ReLU(inplace=True)
+    (33): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (34): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (35): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (36): ReLU(inplace=True)
+    (37): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (38): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (39): ReLU(inplace=True)
+    (40): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (41): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (42): ReLU(inplace=True)
+    (43): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (44): AdaptiveAvgPool2d(output_size=(1, 1))
+  )
+  (classifier): Sequential(
+    (0): Linear(in_features=512, out_features=4096, bias=True)
+    (1): ReLU(inplace=True)
+    (2): Dropout(p=0.5, inplace=False)
+    (3): Linear(in_features=4096, out_features=4096, bias=True)
+    (4): ReLU(inplace=True)
+    (5): Dropout(p=0.5, inplace=False)
+  )
+  (fc): Linear(in_features=4096, out_features=10, bias=True)
+)
+********************************************************************************
+Round   0
+ROUND_ACCURACY method=FedPhoenixRG round=1 accuracy=10.000000
+********************************************************************************
+Round   1
+ROUND_ACCURACY method=FedPhoenixRG round=2 accuracy=13.230000
+********************************************************************************
+Round   2
+ROUND_ACCURACY method=FedPhoenixRG round=3 accuracy=12.230000
+********************************************************************************
+Round   3
+ROUND_ACCURACY method=FedPhoenixRG round=4 accuracy=16.290001
+********************************************************************************
+Round   4
+ROUND_ACCURACY method=FedPhoenixRG round=5 accuracy=32.419998
+********************************************************************************
+Round   5
+ROUND_ACCURACY method=FedPhoenixRG round=6 accuracy=17.620001
+********************************************************************************
+Round   6
+ROUND_ACCURACY method=FedPhoenixRG round=7 accuracy=24.139999
+********************************************************************************
+Round   7
+ROUND_ACCURACY method=FedPhoenixRG round=8 accuracy=23.680000
+********************************************************************************
+Round   8
+ROUND_ACCURACY method=FedPhoenixRG round=9 accuracy=30.129999
+********************************************************************************
+Round   9
+ROUND_ACCURACY method=FedPhoenixRG round=10 accuracy=29.730000
+********************************************************************************
+Round  10
+ROUND_ACCURACY method=FedPhoenixRG round=11 accuracy=38.230000
+********************************************************************************
+Round  11
+ROUND_ACCURACY method=FedPhoenixRG round=12 accuracy=36.910000
+********************************************************************************
+Round  12
+ROUND_ACCURACY method=FedPhoenixRG round=13 accuracy=38.220001
+********************************************************************************
+Round  13
+ROUND_ACCURACY method=FedPhoenixRG round=14 accuracy=46.650002
+********************************************************************************
+Round  14
+ROUND_ACCURACY method=FedPhoenixRG round=15 accuracy=45.459999
+********************************************************************************
+Round  15
+ROUND_ACCURACY method=FedPhoenixRG round=16 accuracy=46.720001
+********************************************************************************
+Round  16
+ROUND_ACCURACY method=FedPhoenixRG round=17 accuracy=45.529999
+********************************************************************************
+Round  17
+ROUND_ACCURACY method=FedPhoenixRG round=18 accuracy=35.709999
+********************************************************************************
+Round  18
+ROUND_ACCURACY method=FedPhoenixRG round=19 accuracy=44.220001
+********************************************************************************
+Round  19
+RG_SCORE round=20 layer=features.0 mean_q=0.081847 max_q=0.267023 fraction_q_positive=0.828125 sampling_entropy=4.156897
+RG_SCORE round=20 layer=features.3 mean_q=0.059730 max_q=0.116280 fraction_q_positive=1.000000 sampling_entropy=4.158635
+RG_SCORE round=20 layer=features.7 mean_q=0.049782 max_q=0.101558 fraction_q_positive=0.992188 sampling_entropy=4.851908
+RG_SCORE round=20 layer=features.10 mean_q=0.043774 max_q=0.087141 fraction_q_positive=1.000000 sampling_entropy=4.851958
+RG_SCORE round=20 layer=features.14 mean_q=0.040955 max_q=0.081388 fraction_q_positive=1.000000 sampling_entropy=5.545103
+RG_SCORE round=20 layer=features.17 mean_q=0.039022 max_q=0.066574 fraction_q_positive=1.000000 sampling_entropy=5.545141
+RG_SCORE round=20 layer=features.20 mean_q=0.039846 max_q=0.061646 fraction_q_positive=1.000000 sampling_entropy=5.545150
+RG_SCORE round=20 layer=features.24 mean_q=0.041173 max_q=0.078098 fraction_q_positive=1.000000 sampling_entropy=6.238252
+RG_SCORE round=20 layer=features.27 mean_q=0.037594 max_q=0.080712 fraction_q_positive=1.000000 sampling_entropy=6.238282
+RG_SCORE round=20 layer=features.30 mean_q=0.037160 max_q=0.072138 fraction_q_positive=1.000000 sampling_entropy=6.238267
+RG_SCORE round=20 layer=features.34 mean_q=0.057084 max_q=0.134792 fraction_q_positive=0.992188 sampling_entropy=6.238088
+RG_SCORE round=20 layer=features.37 mean_q=0.063538 max_q=0.129223 fraction_q_positive=1.000000 sampling_entropy=6.238128
+RG_SCORE round=20 layer=features.40 mean_q=0.082664 max_q=0.183493 fraction_q_positive=1.000000 sampling_entropy=6.237724
+ROUND_ACCURACY method=FedPhoenixRG round=20 accuracy=45.060001
+********************************************************************************
+Round  20
+ROUND_ACCURACY method=FedPhoenixRG round=21 accuracy=51.849998
+********************************************************************************
+Round  21
+ROUND_ACCURACY method=FedPhoenixRG round=22 accuracy=56.029999
+********************************************************************************
+Round  22
+ROUND_ACCURACY method=FedPhoenixRG round=23 accuracy=48.490002
+********************************************************************************
+Round  23
+ROUND_ACCURACY method=FedPhoenixRG round=24 accuracy=53.220001
+********************************************************************************
+Round  24
+ROUND_ACCURACY method=FedPhoenixRG round=25 accuracy=54.939999
+********************************************************************************
+Round  25
+ROUND_ACCURACY method=FedPhoenixRG round=26 accuracy=51.610001
+********************************************************************************
+Round  26
+ROUND_ACCURACY method=FedPhoenixRG round=27 accuracy=53.720001
+********************************************************************************
+Round  27
+ROUND_ACCURACY method=FedPhoenixRG round=28 accuracy=50.930000
+********************************************************************************
+Round  28
+ROUND_ACCURACY method=FedPhoenixRG round=29 accuracy=48.860001
+********************************************************************************
+Round  29
+ROUND_ACCURACY method=FedPhoenixRG round=30 accuracy=55.360001
+********************************************************************************
+Round  30
+ROUND_ACCURACY method=FedPhoenixRG round=31 accuracy=57.060001
+********************************************************************************
+Round  31
+ROUND_ACCURACY method=FedPhoenixRG round=32 accuracy=56.790001
+********************************************************************************
+Round  32
+ROUND_ACCURACY method=FedPhoenixRG round=33 accuracy=58.759998
+********************************************************************************
+Round  33
+ROUND_ACCURACY method=FedPhoenixRG round=34 accuracy=66.059998
+********************************************************************************
+Round  34
+ROUND_ACCURACY method=FedPhoenixRG round=35 accuracy=55.410000
+********************************************************************************
+Round  35
+ROUND_ACCURACY method=FedPhoenixRG round=36 accuracy=52.910000
+********************************************************************************
+Round  36
+ROUND_ACCURACY method=FedPhoenixRG round=37 accuracy=62.430000
+********************************************************************************
+Round  37
+ROUND_ACCURACY method=FedPhoenixRG round=38 accuracy=58.680000
+********************************************************************************
+Round  38
+ROUND_ACCURACY method=FedPhoenixRG round=39 accuracy=59.650002
+********************************************************************************
+Round  39
+RG_SCORE round=40 layer=features.0 mean_q=0.174774 max_q=0.304863 fraction_q_positive=0.984375 sampling_entropy=4.157063
+RG_SCORE round=40 layer=features.3 mean_q=0.162528 max_q=0.224388 fraction_q_positive=1.000000 sampling_entropy=4.158619
+RG_SCORE round=40 layer=features.7 mean_q=0.145459 max_q=0.200249 fraction_q_positive=1.000000 sampling_entropy=4.851864
+RG_SCORE round=40 layer=features.10 mean_q=0.135355 max_q=0.197246 fraction_q_positive=1.000000 sampling_entropy=4.851911
+RG_SCORE round=40 layer=features.14 mean_q=0.131370 max_q=0.177051 fraction_q_positive=1.000000 sampling_entropy=5.545064
+RG_SCORE round=40 layer=features.17 mean_q=0.122682 max_q=0.155945 fraction_q_positive=1.000000 sampling_entropy=5.545121
+RG_SCORE round=40 layer=features.20 mean_q=0.126851 max_q=0.171630 fraction_q_positive=1.000000 sampling_entropy=5.545107
+RG_SCORE round=40 layer=features.24 mean_q=0.123522 max_q=0.177342 fraction_q_positive=1.000000 sampling_entropy=6.238182
+RG_SCORE round=40 layer=features.27 mean_q=0.103714 max_q=0.157561 fraction_q_positive=1.000000 sampling_entropy=6.238221
+RG_SCORE round=40 layer=features.30 mean_q=0.095182 max_q=0.152582 fraction_q_positive=1.000000 sampling_entropy=6.238147
+RG_SCORE round=40 layer=features.34 mean_q=0.127930 max_q=0.307982 fraction_q_positive=0.941406 sampling_entropy=6.236679
+RG_SCORE round=40 layer=features.37 mean_q=0.112411 max_q=0.343766 fraction_q_positive=0.917969 sampling_entropy=6.236643
+RG_SCORE round=40 layer=features.40 mean_q=0.134768 max_q=0.379475 fraction_q_positive=0.933594 sampling_entropy=6.235514
+ROUND_ACCURACY method=FedPhoenixRG round=40 accuracy=65.360001
+********************************************************************************
+Round  40
+ROUND_ACCURACY method=FedPhoenixRG round=41 accuracy=66.180000
+********************************************************************************
+Round  41
+ROUND_ACCURACY method=FedPhoenixRG round=42 accuracy=61.009998
+********************************************************************************
+Round  42
+ROUND_ACCURACY method=FedPhoenixRG round=43 accuracy=62.419998
+********************************************************************************
+Round  43
+ROUND_ACCURACY method=FedPhoenixRG round=44 accuracy=63.029999
+********************************************************************************
+Round  44
+ROUND_ACCURACY method=FedPhoenixRG round=45 accuracy=54.299999
+********************************************************************************
+Round  45
+ROUND_ACCURACY method=FedPhoenixRG round=46 accuracy=66.709999
+********************************************************************************
+Round  46
+ROUND_ACCURACY method=FedPhoenixRG round=47 accuracy=59.470001
+********************************************************************************
+Round  47
+ROUND_ACCURACY method=FedPhoenixRG round=48 accuracy=60.290001
+********************************************************************************
+Round  48
+ROUND_ACCURACY method=FedPhoenixRG round=49 accuracy=58.450001
+********************************************************************************
+Round  49
+ROUND_ACCURACY method=FedPhoenixRG round=50 accuracy=63.480000
+********************************************************************************
+Round  50
+ROUND_ACCURACY method=FedPhoenixRG round=51 accuracy=56.529999
+********************************************************************************
+Round  51
+ROUND_ACCURACY method=FedPhoenixRG round=52 accuracy=66.339996
+********************************************************************************
+Round  52
+ROUND_ACCURACY method=FedPhoenixRG round=53 accuracy=59.490002
+********************************************************************************
+Round  53
+ROUND_ACCURACY method=FedPhoenixRG round=54 accuracy=49.680000
+********************************************************************************
+Round  54
+ROUND_ACCURACY method=FedPhoenixRG round=55 accuracy=67.279999
+********************************************************************************
+Round  55
+ROUND_ACCURACY method=FedPhoenixRG round=56 accuracy=67.529999
+********************************************************************************
+Round  56
+ROUND_ACCURACY method=FedPhoenixRG round=57 accuracy=59.200001
+********************************************************************************
+Round  57
+ROUND_ACCURACY method=FedPhoenixRG round=58 accuracy=60.279999
+********************************************************************************
+Round  58
+ROUND_ACCURACY method=FedPhoenixRG round=59 accuracy=62.700001
+********************************************************************************
+Round  59
+RG_SCORE round=60 layer=features.0 mean_q=0.134450 max_q=0.346263 fraction_q_positive=0.906250 sampling_entropy=4.155982
+RG_SCORE round=60 layer=features.3 mean_q=0.176424 max_q=0.251295 fraction_q_positive=1.000000 sampling_entropy=4.158613
+RG_SCORE round=60 layer=features.7 mean_q=0.170568 max_q=0.237749 fraction_q_positive=1.000000 sampling_entropy=4.851820
+RG_SCORE round=60 layer=features.10 mean_q=0.163919 max_q=0.204505 fraction_q_positive=1.000000 sampling_entropy=4.851924
+RG_SCORE round=60 layer=features.14 mean_q=0.160885 max_q=0.215370 fraction_q_positive=1.000000 sampling_entropy=5.545046
+RG_SCORE round=60 layer=features.17 mean_q=0.152492 max_q=0.202749 fraction_q_positive=1.000000 sampling_entropy=5.545104
+RG_SCORE round=60 layer=features.20 mean_q=0.159175 max_q=0.202562 fraction_q_positive=1.000000 sampling_entropy=5.545115
+RG_SCORE round=60 layer=features.24 mean_q=0.158018 max_q=0.226685 fraction_q_positive=1.000000 sampling_entropy=6.238185
+RG_SCORE round=60 layer=features.27 mean_q=0.135011 max_q=0.193490 fraction_q_positive=1.000000 sampling_entropy=6.238228
+RG_SCORE round=60 layer=features.30 mean_q=0.132385 max_q=0.184417 fraction_q_positive=1.000000 sampling_entropy=6.238184
+RG_SCORE round=60 layer=features.34 mean_q=0.234059 max_q=0.335304 fraction_q_positive=1.000000 sampling_entropy=6.237863
+RG_SCORE round=60 layer=features.37 mean_q=0.262296 max_q=0.382511 fraction_q_positive=1.000000 sampling_entropy=6.237702
+RG_SCORE round=60 layer=features.40 mean_q=0.284359 max_q=0.539451 fraction_q_positive=1.000000 sampling_entropy=6.234238
+ROUND_ACCURACY method=FedPhoenixRG round=60 accuracy=65.070000
+********************************************************************************
+Round  60
+ROUND_ACCURACY method=FedPhoenixRG round=61 accuracy=66.269997
+********************************************************************************
+Round  61
+ROUND_ACCURACY method=FedPhoenixRG round=62 accuracy=64.720001
+********************************************************************************
+Round  62
+ROUND_ACCURACY method=FedPhoenixRG round=63 accuracy=65.389999
+********************************************************************************
+Round  63
+ROUND_ACCURACY method=FedPhoenixRG round=64 accuracy=64.300003
+********************************************************************************
+Round  64
+ROUND_ACCURACY method=FedPhoenixRG round=65 accuracy=63.520000
+********************************************************************************
+Round  65
+ROUND_ACCURACY method=FedPhoenixRG round=66 accuracy=66.739998
+********************************************************************************
+Round  66
+ROUND_ACCURACY method=FedPhoenixRG round=67 accuracy=62.570000
+********************************************************************************
+Round  67
+ROUND_ACCURACY method=FedPhoenixRG round=68 accuracy=55.380001
+********************************************************************************
+Round  68
+ROUND_ACCURACY method=FedPhoenixRG round=69 accuracy=70.860001
+********************************************************************************
+Round  69
+ROUND_ACCURACY method=FedPhoenixRG round=70 accuracy=64.010002
+********************************************************************************
+Round  70
+ROUND_ACCURACY method=FedPhoenixRG round=71 accuracy=60.490002
+********************************************************************************
+Round  71
+ROUND_ACCURACY method=FedPhoenixRG round=72 accuracy=63.490002
+********************************************************************************
+Round  72
+ROUND_ACCURACY method=FedPhoenixRG round=73 accuracy=67.570000
+********************************************************************************
+Round  73
+ROUND_ACCURACY method=FedPhoenixRG round=74 accuracy=67.660004
+********************************************************************************
+Round  74
+ROUND_ACCURACY method=FedPhoenixRG round=75 accuracy=71.029999
+********************************************************************************
+Round  75
+ROUND_ACCURACY method=FedPhoenixRG round=76 accuracy=65.699997
+********************************************************************************
+Round  76
+ROUND_ACCURACY method=FedPhoenixRG round=77 accuracy=63.570000
+********************************************************************************
+Round  77
+ROUND_ACCURACY method=FedPhoenixRG round=78 accuracy=66.199997
+********************************************************************************
+Round  78
+ROUND_ACCURACY method=FedPhoenixRG round=79 accuracy=69.839996
+********************************************************************************
+Round  79
+RG_SCORE round=80 layer=features.0 mean_q=0.154294 max_q=0.343449 fraction_q_positive=0.984375 sampling_entropy=4.156690
+RG_SCORE round=80 layer=features.3 mean_q=0.183688 max_q=0.232739 fraction_q_positive=1.000000 sampling_entropy=4.158707
+RG_SCORE round=80 layer=features.7 mean_q=0.184868 max_q=0.244645 fraction_q_positive=1.000000 sampling_entropy=4.851907
+RG_SCORE round=80 layer=features.10 mean_q=0.181238 max_q=0.222062 fraction_q_positive=1.000000 sampling_entropy=4.851935
+RG_SCORE round=80 layer=features.14 mean_q=0.184985 max_q=0.231899 fraction_q_positive=1.000000 sampling_entropy=5.545070
+RG_SCORE round=80 layer=features.17 mean_q=0.173700 max_q=0.213412 fraction_q_positive=1.000000 sampling_entropy=5.545094
+RG_SCORE round=80 layer=features.20 mean_q=0.181191 max_q=0.219244 fraction_q_positive=1.000000 sampling_entropy=5.545123
+RG_SCORE round=80 layer=features.24 mean_q=0.185696 max_q=0.251312 fraction_q_positive=1.000000 sampling_entropy=6.238206
+RG_SCORE round=80 layer=features.27 mean_q=0.161581 max_q=0.212898 fraction_q_positive=1.000000 sampling_entropy=6.238223
+RG_SCORE round=80 layer=features.30 mean_q=0.158646 max_q=0.207860 fraction_q_positive=1.000000 sampling_entropy=6.238205
+RG_SCORE round=80 layer=features.34 mean_q=0.302429 max_q=0.386652 fraction_q_positive=1.000000 sampling_entropy=6.237951
+RG_SCORE round=80 layer=features.37 mean_q=0.340668 max_q=0.460420 fraction_q_positive=1.000000 sampling_entropy=6.237732
+RG_SCORE round=80 layer=features.40 mean_q=0.321182 max_q=0.590454 fraction_q_positive=0.992188 sampling_entropy=6.233789
+ROUND_ACCURACY method=FedPhoenixRG round=80 accuracy=67.699997
+********************************************************************************
+Round  80
+ROUND_ACCURACY method=FedPhoenixRG round=81 accuracy=64.709999
+********************************************************************************
+Round  81
+ROUND_ACCURACY method=FedPhoenixRG round=82 accuracy=67.000000
+********************************************************************************
+Round  82
+ROUND_ACCURACY method=FedPhoenixRG round=83 accuracy=69.220001
+********************************************************************************
+Round  83
+ROUND_ACCURACY method=FedPhoenixRG round=84 accuracy=65.769997
+********************************************************************************
+Round  84
+ROUND_ACCURACY method=FedPhoenixRG round=85 accuracy=69.860001
+********************************************************************************
+Round  85
+ROUND_ACCURACY method=FedPhoenixRG round=86 accuracy=67.959999
+********************************************************************************
+Round  86
+ROUND_ACCURACY method=FedPhoenixRG round=87 accuracy=69.199997
+********************************************************************************
+Round  87
+ROUND_ACCURACY method=FedPhoenixRG round=88 accuracy=69.900002
+********************************************************************************
+Round  88
+ROUND_ACCURACY method=FedPhoenixRG round=89 accuracy=70.430000
+********************************************************************************
+Round  89
+ROUND_ACCURACY method=FedPhoenixRG round=90 accuracy=68.750000
+********************************************************************************
+Round  90
+ROUND_ACCURACY method=FedPhoenixRG round=91 accuracy=71.339996
+********************************************************************************
+Round  91
+ROUND_ACCURACY method=FedPhoenixRG round=92 accuracy=68.580002
+********************************************************************************
+Round  92
+ROUND_ACCURACY method=FedPhoenixRG round=93 accuracy=65.650002
+********************************************************************************
+Round  93
+ROUND_ACCURACY method=FedPhoenixRG round=94 accuracy=69.250000
+********************************************************************************
+Round  94
+ROUND_ACCURACY method=FedPhoenixRG round=95 accuracy=69.230003
+********************************************************************************
+Round  95
+ROUND_ACCURACY method=FedPhoenixRG round=96 accuracy=69.029999
+********************************************************************************
+Round  96
+ROUND_ACCURACY method=FedPhoenixRG round=97 accuracy=65.620003
+********************************************************************************
+Round  97
+ROUND_ACCURACY method=FedPhoenixRG round=98 accuracy=64.330002
+********************************************************************************
+Round  98
+ROUND_ACCURACY method=FedPhoenixRG round=99 accuracy=60.849998
+********************************************************************************
+Round  99
+RG_SCORE round=100 layer=features.0 mean_q=0.152911 max_q=0.398468 fraction_q_positive=0.921875 sampling_entropy=4.155481
+RG_SCORE round=100 layer=features.3 mean_q=0.181745 max_q=0.223842 fraction_q_positive=1.000000 sampling_entropy=4.158721
+RG_SCORE round=100 layer=features.7 mean_q=0.188816 max_q=0.244424 fraction_q_positive=1.000000 sampling_entropy=4.851859
+RG_SCORE round=100 layer=features.10 mean_q=0.186598 max_q=0.226081 fraction_q_positive=1.000000 sampling_entropy=4.851950
+RG_SCORE round=100 layer=features.14 mean_q=0.194479 max_q=0.247972 fraction_q_positive=1.000000 sampling_entropy=5.545072
+RG_SCORE round=100 layer=features.17 mean_q=0.182770 max_q=0.226763 fraction_q_positive=1.000000 sampling_entropy=5.545095
+RG_SCORE round=100 layer=features.20 mean_q=0.190563 max_q=0.220928 fraction_q_positive=1.000000 sampling_entropy=5.545119
+RG_SCORE round=100 layer=features.24 mean_q=0.201113 max_q=0.251902 fraction_q_positive=1.000000 sampling_entropy=6.238203
+RG_SCORE round=100 layer=features.27 mean_q=0.175301 max_q=0.228721 fraction_q_positive=1.000000 sampling_entropy=6.238217
+RG_SCORE round=100 layer=features.30 mean_q=0.169717 max_q=0.220156 fraction_q_positive=1.000000 sampling_entropy=6.238206
+RG_SCORE round=100 layer=features.34 mean_q=0.328272 max_q=0.427423 fraction_q_positive=1.000000 sampling_entropy=6.237781
+RG_SCORE round=100 layer=features.37 mean_q=0.363103 max_q=0.496412 fraction_q_positive=1.000000 sampling_entropy=6.237493
+RG_SCORE round=100 layer=features.40 mean_q=0.291785 max_q=0.550048 fraction_q_positive=0.998047 sampling_entropy=6.234124
+ROUND_ACCURACY method=FedPhoenixRG round=100 accuracy=64.239998
+********************************************************************************
+Round 100
+ROUND_ACCURACY method=FedPhoenixRG round=101 accuracy=69.209999
+********************************************************************************
+Round 101
+ROUND_ACCURACY method=FedPhoenixRG round=102 accuracy=72.230003
+********************************************************************************
+Round 102
+ROUND_ACCURACY method=FedPhoenixRG round=103 accuracy=72.870003
+********************************************************************************
+Round 103
+ROUND_ACCURACY method=FedPhoenixRG round=104 accuracy=69.169998
+********************************************************************************
+Round 104
+ROUND_ACCURACY method=FedPhoenixRG round=105 accuracy=71.089996
+********************************************************************************
+Round 105
+ROUND_ACCURACY method=FedPhoenixRG round=106 accuracy=70.160004
+********************************************************************************
+Round 106
+ROUND_ACCURACY method=FedPhoenixRG round=107 accuracy=59.070000
+********************************************************************************
+Round 107
+ROUND_ACCURACY method=FedPhoenixRG round=108 accuracy=71.500000
+********************************************************************************
+Round 108
+ROUND_ACCURACY method=FedPhoenixRG round=109 accuracy=72.629997
+********************************************************************************
+Round 109
+ROUND_ACCURACY method=FedPhoenixRG round=110 accuracy=71.190002
+********************************************************************************
+Round 110
+ROUND_ACCURACY method=FedPhoenixRG round=111 accuracy=71.559998
+********************************************************************************
+Round 111
+ROUND_ACCURACY method=FedPhoenixRG round=112 accuracy=71.589996
+********************************************************************************
+Round 112
+ROUND_ACCURACY method=FedPhoenixRG round=113 accuracy=69.910004
+********************************************************************************
+Round 113
+ROUND_ACCURACY method=FedPhoenixRG round=114 accuracy=66.550003
+********************************************************************************
+Round 114
+ROUND_ACCURACY method=FedPhoenixRG round=115 accuracy=60.709999
+********************************************************************************
+Round 115
+ROUND_ACCURACY method=FedPhoenixRG round=116 accuracy=73.120003
+********************************************************************************
+Round 116
+ROUND_ACCURACY method=FedPhoenixRG round=117 accuracy=67.019997
+********************************************************************************
+Round 117
+ROUND_ACCURACY method=FedPhoenixRG round=118 accuracy=72.839996
+********************************************************************************
+Round 118
+ROUND_ACCURACY method=FedPhoenixRG round=119 accuracy=70.370003
+********************************************************************************
+Round 119
+RG_SCORE round=120 layer=features.0 mean_q=0.140834 max_q=0.338313 fraction_q_positive=0.890625 sampling_entropy=4.155843
+RG_SCORE round=120 layer=features.3 mean_q=0.173801 max_q=0.230204 fraction_q_positive=1.000000 sampling_entropy=4.158588
+RG_SCORE round=120 layer=features.7 mean_q=0.179605 max_q=0.251050 fraction_q_positive=1.000000 sampling_entropy=4.851871
+RG_SCORE round=120 layer=features.10 mean_q=0.175948 max_q=0.208592 fraction_q_positive=1.000000 sampling_entropy=4.851951
+RG_SCORE round=120 layer=features.14 mean_q=0.184470 max_q=0.248567 fraction_q_positive=1.000000 sampling_entropy=5.545063
+RG_SCORE round=120 layer=features.17 mean_q=0.175351 max_q=0.223680 fraction_q_positive=1.000000 sampling_entropy=5.545079
+RG_SCORE round=120 layer=features.20 mean_q=0.179301 max_q=0.206743 fraction_q_positive=1.000000 sampling_entropy=5.545119
+RG_SCORE round=120 layer=features.24 mean_q=0.188615 max_q=0.255349 fraction_q_positive=1.000000 sampling_entropy=6.238183
+RG_SCORE round=120 layer=features.27 mean_q=0.167243 max_q=0.233537 fraction_q_positive=1.000000 sampling_entropy=6.238169
+RG_SCORE round=120 layer=features.30 mean_q=0.156134 max_q=0.211760 fraction_q_positive=1.000000 sampling_entropy=6.238147
+RG_SCORE round=120 layer=features.34 mean_q=0.264585 max_q=0.396128 fraction_q_positive=1.000000 sampling_entropy=6.236507
+RG_SCORE round=120 layer=features.37 mean_q=0.224762 max_q=0.421186 fraction_q_positive=0.988281 sampling_entropy=6.235836
+RG_SCORE round=120 layer=features.40 mean_q=0.153327 max_q=0.456706 fraction_q_positive=0.960938 sampling_entropy=6.235050
+ROUND_ACCURACY method=FedPhoenixRG round=120 accuracy=68.209999
+********************************************************************************
+Round 120
+ROUND_ACCURACY method=FedPhoenixRG round=121 accuracy=73.599998
+********************************************************************************
+Round 121
+ROUND_ACCURACY method=FedPhoenixRG round=122 accuracy=69.529999
+********************************************************************************
+Round 122
+ROUND_ACCURACY method=FedPhoenixRG round=123 accuracy=71.290001
+********************************************************************************
+Round 123
+ROUND_ACCURACY method=FedPhoenixRG round=124 accuracy=65.089996
+********************************************************************************
+Round 124
+ROUND_ACCURACY method=FedPhoenixRG round=125 accuracy=66.620003
+********************************************************************************
+Round 125
+ROUND_ACCURACY method=FedPhoenixRG round=126 accuracy=64.430000
+********************************************************************************
+Round 126
+ROUND_ACCURACY method=FedPhoenixRG round=127 accuracy=72.790001
+********************************************************************************
+Round 127
+ROUND_ACCURACY method=FedPhoenixRG round=128 accuracy=69.360001
+********************************************************************************
+Round 128
+ROUND_ACCURACY method=FedPhoenixRG round=129 accuracy=74.839996
+********************************************************************************
+Round 129
+ROUND_ACCURACY method=FedPhoenixRG round=130 accuracy=65.440002
+********************************************************************************
+Round 130
+ROUND_ACCURACY method=FedPhoenixRG round=131 accuracy=68.360001
+********************************************************************************
+Round 131
+ROUND_ACCURACY method=FedPhoenixRG round=132 accuracy=75.419998
+********************************************************************************
+Round 132
+ROUND_ACCURACY method=FedPhoenixRG round=133 accuracy=71.760002
+********************************************************************************
+Round 133
+ROUND_ACCURACY method=FedPhoenixRG round=134 accuracy=73.120003
+********************************************************************************
+Round 134
+ROUND_ACCURACY method=FedPhoenixRG round=135 accuracy=67.339996
+********************************************************************************
+Round 135
+ROUND_ACCURACY method=FedPhoenixRG round=136 accuracy=66.459999
+********************************************************************************
+Round 136
+ROUND_ACCURACY method=FedPhoenixRG round=137 accuracy=73.269997
+********************************************************************************
+Round 137
+ROUND_ACCURACY method=FedPhoenixRG round=138 accuracy=75.470001
+********************************************************************************
+Round 138
+ROUND_ACCURACY method=FedPhoenixRG round=139 accuracy=71.410004
+********************************************************************************
+Round 139
+RG_SCORE round=140 layer=features.0 mean_q=0.153851 max_q=0.352381 fraction_q_positive=0.968750 sampling_entropy=4.156183
+RG_SCORE round=140 layer=features.3 mean_q=0.190187 max_q=0.229174 fraction_q_positive=1.000000 sampling_entropy=4.158723
+RG_SCORE round=140 layer=features.7 mean_q=0.187524 max_q=0.233984 fraction_q_positive=1.000000 sampling_entropy=4.851906
+RG_SCORE round=140 layer=features.10 mean_q=0.179062 max_q=0.217804 fraction_q_positive=1.000000 sampling_entropy=4.851955
+RG_SCORE round=140 layer=features.14 mean_q=0.188307 max_q=0.237085 fraction_q_positive=1.000000 sampling_entropy=5.545075
+RG_SCORE round=140 layer=features.17 mean_q=0.179059 max_q=0.227314 fraction_q_positive=1.000000 sampling_entropy=5.545074
+RG_SCORE round=140 layer=features.20 mean_q=0.181141 max_q=0.224849 fraction_q_positive=1.000000 sampling_entropy=5.545116
+RG_SCORE round=140 layer=features.24 mean_q=0.196698 max_q=0.244336 fraction_q_positive=1.000000 sampling_entropy=6.238230
+RG_SCORE round=140 layer=features.27 mean_q=0.180044 max_q=0.236290 fraction_q_positive=1.000000 sampling_entropy=6.238217
+RG_SCORE round=140 layer=features.30 mean_q=0.166525 max_q=0.213716 fraction_q_positive=1.000000 sampling_entropy=6.238199
+RG_SCORE round=140 layer=features.34 mean_q=0.301005 max_q=0.422730 fraction_q_positive=1.000000 sampling_entropy=6.237180
+RG_SCORE round=140 layer=features.37 mean_q=0.250978 max_q=0.495959 fraction_q_positive=0.998047 sampling_entropy=6.236057
+RG_SCORE round=140 layer=features.40 mean_q=0.147743 max_q=0.357275 fraction_q_positive=0.970703 sampling_entropy=6.235593
+ROUND_ACCURACY method=FedPhoenixRG round=140 accuracy=74.129997
+********************************************************************************
+Round 140
+ROUND_ACCURACY method=FedPhoenixRG round=141 accuracy=74.629997
+********************************************************************************
+Round 141
+ROUND_ACCURACY method=FedPhoenixRG round=142 accuracy=60.599998
+********************************************************************************
+Round 142
+ROUND_ACCURACY method=FedPhoenixRG round=143 accuracy=61.880001
+********************************************************************************
+Round 143
+ROUND_ACCURACY method=FedPhoenixRG round=144 accuracy=74.769997
+********************************************************************************
+Round 144
+ROUND_ACCURACY method=FedPhoenixRG round=145 accuracy=65.930000
+********************************************************************************
+Round 145
+ROUND_ACCURACY method=FedPhoenixRG round=146 accuracy=65.970001
+********************************************************************************
+Round 146
+ROUND_ACCURACY method=FedPhoenixRG round=147 accuracy=73.519997
+********************************************************************************
+Round 147
+ROUND_ACCURACY method=FedPhoenixRG round=148 accuracy=72.449997
+********************************************************************************
+Round 148
+ROUND_ACCURACY method=FedPhoenixRG round=149 accuracy=70.680000
+********************************************************************************
+Round 149
+ROUND_ACCURACY method=FedPhoenixRG round=150 accuracy=73.480003
+********************************************************************************
+Round 150
+ROUND_ACCURACY method=FedPhoenixRG round=151 accuracy=62.630001
+********************************************************************************
+Round 151
+ROUND_ACCURACY method=FedPhoenixRG round=152 accuracy=69.150002
+********************************************************************************
+Round 152
+ROUND_ACCURACY method=FedPhoenixRG round=153 accuracy=74.500000
+********************************************************************************
+Round 153
+ROUND_ACCURACY method=FedPhoenixRG round=154 accuracy=72.959999
+********************************************************************************
+Round 154
+ROUND_ACCURACY method=FedPhoenixRG round=155 accuracy=70.779999
+********************************************************************************
+Round 155
+ROUND_ACCURACY method=FedPhoenixRG round=156 accuracy=73.339996
+********************************************************************************
+Round 156
+ROUND_ACCURACY method=FedPhoenixRG round=157 accuracy=67.470001
+********************************************************************************
+Round 157
+ROUND_ACCURACY method=FedPhoenixRG round=158 accuracy=69.000000
+********************************************************************************
+Round 158
+ROUND_ACCURACY method=FedPhoenixRG round=159 accuracy=70.739998
+********************************************************************************
+Round 159
+RG_SCORE round=160 layer=features.0 mean_q=0.127271 max_q=0.303071 fraction_q_positive=0.875000 sampling_entropy=4.155931
+RG_SCORE round=160 layer=features.3 mean_q=0.167489 max_q=0.222528 fraction_q_positive=1.000000 sampling_entropy=4.158669
+RG_SCORE round=160 layer=features.7 mean_q=0.174163 max_q=0.236369 fraction_q_positive=1.000000 sampling_entropy=4.851878
+RG_SCORE round=160 layer=features.10 mean_q=0.168921 max_q=0.202076 fraction_q_positive=1.000000 sampling_entropy=4.851965
+RG_SCORE round=160 layer=features.14 mean_q=0.181955 max_q=0.225151 fraction_q_positive=1.000000 sampling_entropy=5.545085
+RG_SCORE round=160 layer=features.17 mean_q=0.175617 max_q=0.226448 fraction_q_positive=1.000000 sampling_entropy=5.545073
+RG_SCORE round=160 layer=features.20 mean_q=0.179512 max_q=0.213080 fraction_q_positive=1.000000 sampling_entropy=5.545133
+RG_SCORE round=160 layer=features.24 mean_q=0.198939 max_q=0.246743 fraction_q_positive=1.000000 sampling_entropy=6.238241
+RG_SCORE round=160 layer=features.27 mean_q=0.185263 max_q=0.236772 fraction_q_positive=1.000000 sampling_entropy=6.238233
+RG_SCORE round=160 layer=features.30 mean_q=0.170671 max_q=0.220910 fraction_q_positive=1.000000 sampling_entropy=6.238225
+RG_SCORE round=160 layer=features.34 mean_q=0.309043 max_q=0.457385 fraction_q_positive=1.000000 sampling_entropy=6.237568
+RG_SCORE round=160 layer=features.37 mean_q=0.274835 max_q=0.450162 fraction_q_positive=1.000000 sampling_entropy=6.236345
+RG_SCORE round=160 layer=features.40 mean_q=0.126327 max_q=0.391016 fraction_q_positive=0.933594 sampling_entropy=6.235399
+ROUND_ACCURACY method=FedPhoenixRG round=160 accuracy=69.250000
+********************************************************************************
+Round 160
+ROUND_ACCURACY method=FedPhoenixRG round=161 accuracy=75.120003
+********************************************************************************
+Round 161
+ROUND_ACCURACY method=FedPhoenixRG round=162 accuracy=71.379997
+********************************************************************************
+Round 162
+ROUND_ACCURACY method=FedPhoenixRG round=163 accuracy=72.059998
+********************************************************************************
+Round 163
+ROUND_ACCURACY method=FedPhoenixRG round=164 accuracy=67.730003
+********************************************************************************
+Round 164
+ROUND_ACCURACY method=FedPhoenixRG round=165 accuracy=75.010002
+********************************************************************************
+Round 165
+ROUND_ACCURACY method=FedPhoenixRG round=166 accuracy=71.389999
+********************************************************************************
+Round 166
+ROUND_ACCURACY method=FedPhoenixRG round=167 accuracy=68.839996
+********************************************************************************
+Round 167
+ROUND_ACCURACY method=FedPhoenixRG round=168 accuracy=68.980003
+********************************************************************************
+Round 168
+ROUND_ACCURACY method=FedPhoenixRG round=169 accuracy=70.980003
+********************************************************************************
+Round 169
+ROUND_ACCURACY method=FedPhoenixRG round=170 accuracy=63.680000
+********************************************************************************
+Round 170
+ROUND_ACCURACY method=FedPhoenixRG round=171 accuracy=68.360001
+********************************************************************************
+Round 171
+ROUND_ACCURACY method=FedPhoenixRG round=172 accuracy=67.250000
+********************************************************************************
+Round 172
+ROUND_ACCURACY method=FedPhoenixRG round=173 accuracy=67.720001
+********************************************************************************
+Round 173
+ROUND_ACCURACY method=FedPhoenixRG round=174 accuracy=70.760002
+********************************************************************************
+Round 174
+ROUND_ACCURACY method=FedPhoenixRG round=175 accuracy=75.010002
+********************************************************************************
+Round 175
+ROUND_ACCURACY method=FedPhoenixRG round=176 accuracy=73.690002
+********************************************************************************
+Round 176
+ROUND_ACCURACY method=FedPhoenixRG round=177 accuracy=69.500000
+********************************************************************************
+Round 177
+ROUND_ACCURACY method=FedPhoenixRG round=178 accuracy=66.930000
+********************************************************************************
+Round 178
+ROUND_ACCURACY method=FedPhoenixRG round=179 accuracy=75.320000
+********************************************************************************
+Round 179
+RG_SCORE round=180 layer=features.0 mean_q=0.154858 max_q=0.367438 fraction_q_positive=0.906250 sampling_entropy=4.155149
+RG_SCORE round=180 layer=features.3 mean_q=0.164564 max_q=0.223793 fraction_q_positive=1.000000 sampling_entropy=4.158474
+RG_SCORE round=180 layer=features.7 mean_q=0.170369 max_q=0.240210 fraction_q_positive=1.000000 sampling_entropy=4.851760
+RG_SCORE round=180 layer=features.10 mean_q=0.156331 max_q=0.195684 fraction_q_positive=1.000000 sampling_entropy=4.851932
+RG_SCORE round=180 layer=features.14 mean_q=0.164473 max_q=0.214974 fraction_q_positive=1.000000 sampling_entropy=5.545024
+RG_SCORE round=180 layer=features.17 mean_q=0.158902 max_q=0.207808 fraction_q_positive=1.000000 sampling_entropy=5.545065
+RG_SCORE round=180 layer=features.20 mean_q=0.160586 max_q=0.194356 fraction_q_positive=1.000000 sampling_entropy=5.545102
+RG_SCORE round=180 layer=features.24 mean_q=0.175749 max_q=0.245163 fraction_q_positive=1.000000 sampling_entropy=6.238132
+RG_SCORE round=180 layer=features.27 mean_q=0.165266 max_q=0.235016 fraction_q_positive=1.000000 sampling_entropy=6.238137
+RG_SCORE round=180 layer=features.30 mean_q=0.146492 max_q=0.196838 fraction_q_positive=1.000000 sampling_entropy=6.238164
+RG_SCORE round=180 layer=features.34 mean_q=0.263728 max_q=0.420705 fraction_q_positive=0.996094 sampling_entropy=6.236555
+RG_SCORE round=180 layer=features.37 mean_q=0.208580 max_q=0.462129 fraction_q_positive=0.990234 sampling_entropy=6.235928
+RG_SCORE round=180 layer=features.40 mean_q=0.117023 max_q=0.387824 fraction_q_positive=0.912109 sampling_entropy=6.235697
+ROUND_ACCURACY method=FedPhoenixRG round=180 accuracy=71.709999
+********************************************************************************
+Round 180
+ROUND_ACCURACY method=FedPhoenixRG round=181 accuracy=75.440002
+********************************************************************************
+Round 181
+ROUND_ACCURACY method=FedPhoenixRG round=182 accuracy=66.620003
+********************************************************************************
+Round 182
+ROUND_ACCURACY method=FedPhoenixRG round=183 accuracy=75.870003
+********************************************************************************
+Round 183
+ROUND_ACCURACY method=FedPhoenixRG round=184 accuracy=74.650002
+********************************************************************************
+Round 184
+ROUND_ACCURACY method=FedPhoenixRG round=185 accuracy=74.489998
+********************************************************************************
+Round 185
+ROUND_ACCURACY method=FedPhoenixRG round=186 accuracy=73.089996
+********************************************************************************
+Round 186
+ROUND_ACCURACY method=FedPhoenixRG round=187 accuracy=72.239998
+********************************************************************************
+Round 187
+ROUND_ACCURACY method=FedPhoenixRG round=188 accuracy=75.199997
+********************************************************************************
+Round 188
+ROUND_ACCURACY method=FedPhoenixRG round=189 accuracy=66.709999
+********************************************************************************
+Round 189
+ROUND_ACCURACY method=FedPhoenixRG round=190 accuracy=68.639999
+********************************************************************************
+Round 190
+ROUND_ACCURACY method=FedPhoenixRG round=191 accuracy=63.459999
+********************************************************************************
+Round 191
+ROUND_ACCURACY method=FedPhoenixRG round=192 accuracy=72.070000
+********************************************************************************
+Round 192
+ROUND_ACCURACY method=FedPhoenixRG round=193 accuracy=75.050003
+********************************************************************************
+Round 193
+ROUND_ACCURACY method=FedPhoenixRG round=194 accuracy=72.279999
+********************************************************************************
+Round 194
+ROUND_ACCURACY method=FedPhoenixRG round=195 accuracy=72.339996
+********************************************************************************
+Round 195
+ROUND_ACCURACY method=FedPhoenixRG round=196 accuracy=76.610001
+********************************************************************************
+Round 196
+ROUND_ACCURACY method=FedPhoenixRG round=197 accuracy=60.619999
+********************************************************************************
+Round 197
+ROUND_ACCURACY method=FedPhoenixRG round=198 accuracy=69.779999
+********************************************************************************
+Round 198
+ROUND_ACCURACY method=FedPhoenixRG round=199 accuracy=64.050003
+********************************************************************************
+Round 199
+RG_SCORE round=200 layer=features.0 mean_q=0.153288 max_q=0.285805 fraction_q_positive=0.984375 sampling_entropy=4.156867
+RG_SCORE round=200 layer=features.3 mean_q=0.185539 max_q=0.226915 fraction_q_positive=1.000000 sampling_entropy=4.158758
+RG_SCORE round=200 layer=features.7 mean_q=0.184097 max_q=0.236855 fraction_q_positive=1.000000 sampling_entropy=4.851860
+RG_SCORE round=200 layer=features.10 mean_q=0.167191 max_q=0.197394 fraction_q_positive=1.000000 sampling_entropy=4.851971
+RG_SCORE round=200 layer=features.14 mean_q=0.177059 max_q=0.230056 fraction_q_positive=1.000000 sampling_entropy=5.545075
+RG_SCORE round=200 layer=features.17 mean_q=0.170149 max_q=0.210863 fraction_q_positive=1.000000 sampling_entropy=5.545081
+RG_SCORE round=200 layer=features.20 mean_q=0.171805 max_q=0.208573 fraction_q_positive=1.000000 sampling_entropy=5.545117
+RG_SCORE round=200 layer=features.24 mean_q=0.190185 max_q=0.249156 fraction_q_positive=1.000000 sampling_entropy=6.238198
+RG_SCORE round=200 layer=features.27 mean_q=0.182256 max_q=0.248404 fraction_q_positive=1.000000 sampling_entropy=6.238169
+RG_SCORE round=200 layer=features.30 mean_q=0.160428 max_q=0.219326 fraction_q_positive=1.000000 sampling_entropy=6.238157
+RG_SCORE round=200 layer=features.34 mean_q=0.288247 max_q=0.443291 fraction_q_positive=1.000000 sampling_entropy=6.236772
+RG_SCORE round=200 layer=features.37 mean_q=0.239118 max_q=0.420946 fraction_q_positive=0.992188 sampling_entropy=6.235942
+RG_SCORE round=200 layer=features.40 mean_q=0.121208 max_q=0.392460 fraction_q_positive=0.947266 sampling_entropy=6.235727
+ROUND_ACCURACY method=FedPhoenixRG round=200 accuracy=58.480000
+********************************************************************************
+Round 200
+ROUND_ACCURACY method=FedPhoenixRG round=201 accuracy=70.300003
+********************************************************************************
+Round 201
+ROUND_ACCURACY method=FedPhoenixRG round=202 accuracy=73.550003
+********************************************************************************
+Round 202
+ROUND_ACCURACY method=FedPhoenixRG round=203 accuracy=62.380001
+********************************************************************************
+Round 203
+ROUND_ACCURACY method=FedPhoenixRG round=204 accuracy=73.610001
+********************************************************************************
+Round 204
+ROUND_ACCURACY method=FedPhoenixRG round=205 accuracy=72.320000
+********************************************************************************
+Round 205
+ROUND_ACCURACY method=FedPhoenixRG round=206 accuracy=76.139999
+********************************************************************************
+Round 206
+ROUND_ACCURACY method=FedPhoenixRG round=207 accuracy=74.160004
+********************************************************************************
+Round 207
+ROUND_ACCURACY method=FedPhoenixRG round=208 accuracy=73.940002
+********************************************************************************
+Round 208
+ROUND_ACCURACY method=FedPhoenixRG round=209 accuracy=70.750000
+********************************************************************************
+Round 209
+ROUND_ACCURACY method=FedPhoenixRG round=210 accuracy=70.260002
+********************************************************************************
+Round 210
+ROUND_ACCURACY method=FedPhoenixRG round=211 accuracy=66.860001
+********************************************************************************
+Round 211
+ROUND_ACCURACY method=FedPhoenixRG round=212 accuracy=76.129997
+********************************************************************************
+Round 212
+ROUND_ACCURACY method=FedPhoenixRG round=213 accuracy=69.570000
+********************************************************************************
+Round 213
+ROUND_ACCURACY method=FedPhoenixRG round=214 accuracy=74.459999
+********************************************************************************
+Round 214
+ROUND_ACCURACY method=FedPhoenixRG round=215 accuracy=74.080002
+********************************************************************************
+Round 215
+ROUND_ACCURACY method=FedPhoenixRG round=216 accuracy=73.050003
+********************************************************************************
+Round 216
+ROUND_ACCURACY method=FedPhoenixRG round=217 accuracy=61.650002
+********************************************************************************
+Round 217
+ROUND_ACCURACY method=FedPhoenixRG round=218 accuracy=77.870003
+********************************************************************************
+Round 218
+ROUND_ACCURACY method=FedPhoenixRG round=219 accuracy=71.989998
+********************************************************************************
+Round 219
+RG_SCORE round=220 layer=features.0 mean_q=0.127950 max_q=0.356170 fraction_q_positive=0.890625 sampling_entropy=4.155829
+RG_SCORE round=220 layer=features.3 mean_q=0.170865 max_q=0.209533 fraction_q_positive=1.000000 sampling_entropy=4.158744
+RG_SCORE round=220 layer=features.7 mean_q=0.179569 max_q=0.242694 fraction_q_positive=1.000000 sampling_entropy=4.851897
+RG_SCORE round=220 layer=features.10 mean_q=0.164384 max_q=0.201784 fraction_q_positive=1.000000 sampling_entropy=4.851962
+RG_SCORE round=220 layer=features.14 mean_q=0.176442 max_q=0.237515 fraction_q_positive=1.000000 sampling_entropy=5.545062
+RG_SCORE round=220 layer=features.17 mean_q=0.166637 max_q=0.212981 fraction_q_positive=1.000000 sampling_entropy=5.545070
+RG_SCORE round=220 layer=features.20 mean_q=0.165513 max_q=0.202785 fraction_q_positive=1.000000 sampling_entropy=5.545103
+RG_SCORE round=220 layer=features.24 mean_q=0.185514 max_q=0.257638 fraction_q_positive=1.000000 sampling_entropy=6.238197
+RG_SCORE round=220 layer=features.27 mean_q=0.176654 max_q=0.242284 fraction_q_positive=1.000000 sampling_entropy=6.238158
+RG_SCORE round=220 layer=features.30 mean_q=0.154111 max_q=0.207663 fraction_q_positive=1.000000 sampling_entropy=6.238161
+RG_SCORE round=220 layer=features.34 mean_q=0.292664 max_q=0.426526 fraction_q_positive=0.998047 sampling_entropy=6.236635
+RG_SCORE round=220 layer=features.37 mean_q=0.278668 max_q=0.483929 fraction_q_positive=0.994141 sampling_entropy=6.235906
+RG_SCORE round=220 layer=features.40 mean_q=0.141130 max_q=0.428237 fraction_q_positive=0.900391 sampling_entropy=6.234490
+ROUND_ACCURACY method=FedPhoenixRG round=220 accuracy=72.949997
+********************************************************************************
+Round 220
+ROUND_ACCURACY method=FedPhoenixRG round=221 accuracy=68.089996
+********************************************************************************
+Round 221
+ROUND_ACCURACY method=FedPhoenixRG round=222 accuracy=69.029999
+********************************************************************************
+Round 222
+ROUND_ACCURACY method=FedPhoenixRG round=223 accuracy=76.790001
+********************************************************************************
+Round 223
+ROUND_ACCURACY method=FedPhoenixRG round=224 accuracy=75.930000
+********************************************************************************
+Round 224
+ROUND_ACCURACY method=FedPhoenixRG round=225 accuracy=74.529999
+********************************************************************************
+Round 225
+ROUND_ACCURACY method=FedPhoenixRG round=226 accuracy=69.620003
+********************************************************************************
+Round 226
+ROUND_ACCURACY method=FedPhoenixRG round=227 accuracy=72.010002
+********************************************************************************
+Round 227
+ROUND_ACCURACY method=FedPhoenixRG round=228 accuracy=70.129997
+********************************************************************************
+Round 228
+ROUND_ACCURACY method=FedPhoenixRG round=229 accuracy=63.900002
+********************************************************************************
+Round 229
+ROUND_ACCURACY method=FedPhoenixRG round=230 accuracy=76.650002
+********************************************************************************
+Round 230
+ROUND_ACCURACY method=FedPhoenixRG round=231 accuracy=72.370003
+********************************************************************************
+Round 231
+ROUND_ACCURACY method=FedPhoenixRG round=232 accuracy=77.900002
+********************************************************************************
+Round 232
+ROUND_ACCURACY method=FedPhoenixRG round=233 accuracy=72.349998
+********************************************************************************
+Round 233
+ROUND_ACCURACY method=FedPhoenixRG round=234 accuracy=68.139999
+********************************************************************************
+Round 234
+ROUND_ACCURACY method=FedPhoenixRG round=235 accuracy=63.400002
+********************************************************************************
+Round 235
+ROUND_ACCURACY method=FedPhoenixRG round=236 accuracy=76.730003
+********************************************************************************
+Round 236
+ROUND_ACCURACY method=FedPhoenixRG round=237 accuracy=70.220001
+********************************************************************************
+Round 237
+ROUND_ACCURACY method=FedPhoenixRG round=238 accuracy=71.019997
+********************************************************************************
+Round 238
+ROUND_ACCURACY method=FedPhoenixRG round=239 accuracy=75.580002
+********************************************************************************
+Round 239
+RG_SCORE round=240 layer=features.0 mean_q=0.132345 max_q=0.340532 fraction_q_positive=0.968750 sampling_entropy=4.156830
+RG_SCORE round=240 layer=features.3 mean_q=0.158380 max_q=0.218978 fraction_q_positive=1.000000 sampling_entropy=4.158706
+RG_SCORE round=240 layer=features.7 mean_q=0.168012 max_q=0.230339 fraction_q_positive=1.000000 sampling_entropy=4.851893
+RG_SCORE round=240 layer=features.10 mean_q=0.159474 max_q=0.187696 fraction_q_positive=1.000000 sampling_entropy=4.851962
+RG_SCORE round=240 layer=features.14 mean_q=0.163317 max_q=0.216252 fraction_q_positive=1.000000 sampling_entropy=5.545079
+RG_SCORE round=240 layer=features.17 mean_q=0.157756 max_q=0.200235 fraction_q_positive=1.000000 sampling_entropy=5.545067
+RG_SCORE round=240 layer=features.20 mean_q=0.156219 max_q=0.191392 fraction_q_positive=1.000000 sampling_entropy=5.545114
+RG_SCORE round=240 layer=features.24 mean_q=0.174449 max_q=0.230127 fraction_q_positive=1.000000 sampling_entropy=6.238193
+RG_SCORE round=240 layer=features.27 mean_q=0.167131 max_q=0.221455 fraction_q_positive=1.000000 sampling_entropy=6.238158
+RG_SCORE round=240 layer=features.30 mean_q=0.149351 max_q=0.204010 fraction_q_positive=1.000000 sampling_entropy=6.238188
+RG_SCORE round=240 layer=features.34 mean_q=0.267948 max_q=0.446086 fraction_q_positive=0.984375 sampling_entropy=6.235621
+RG_SCORE round=240 layer=features.37 mean_q=0.221862 max_q=0.484704 fraction_q_positive=0.972656 sampling_entropy=6.234427
+RG_SCORE round=240 layer=features.40 mean_q=0.123845 max_q=0.449338 fraction_q_positive=0.839844 sampling_entropy=6.234220
+ROUND_ACCURACY method=FedPhoenixRG round=240 accuracy=64.040001
+********************************************************************************
+Round 240
+ROUND_ACCURACY method=FedPhoenixRG round=241 accuracy=74.989998
+********************************************************************************
+Round 241
+ROUND_ACCURACY method=FedPhoenixRG round=242 accuracy=75.919998
+********************************************************************************
+Round 242
+ROUND_ACCURACY method=FedPhoenixRG round=243 accuracy=74.360001
+********************************************************************************
+Round 243
+ROUND_ACCURACY method=FedPhoenixRG round=244 accuracy=74.620003
+********************************************************************************
+Round 244
+ROUND_ACCURACY method=FedPhoenixRG round=245 accuracy=75.790001
+********************************************************************************
+Round 245
+ROUND_ACCURACY method=FedPhoenixRG round=246 accuracy=75.389999
+********************************************************************************
+Round 246
+ROUND_ACCURACY method=FedPhoenixRG round=247 accuracy=54.430000
+********************************************************************************
+Round 247
+ROUND_ACCURACY method=FedPhoenixRG round=248 accuracy=70.709999
+********************************************************************************
+Round 248
+ROUND_ACCURACY method=FedPhoenixRG round=249 accuracy=69.400002
+********************************************************************************
+Round 249
+ROUND_ACCURACY method=FedPhoenixRG round=250 accuracy=71.980003
+********************************************************************************
+Round 250
+ROUND_ACCURACY method=FedPhoenixRG round=251 accuracy=76.769997
+********************************************************************************
+Round 251
+ROUND_ACCURACY method=FedPhoenixRG round=252 accuracy=73.230003
+********************************************************************************
+Round 252
+ROUND_ACCURACY method=FedPhoenixRG round=253 accuracy=69.830002
+********************************************************************************
+Round 253
+ROUND_ACCURACY method=FedPhoenixRG round=254 accuracy=69.260002
+********************************************************************************
+Round 254
+ROUND_ACCURACY method=FedPhoenixRG round=255 accuracy=78.410004
+********************************************************************************
+Round 255
+ROUND_ACCURACY method=FedPhoenixRG round=256 accuracy=70.260002
+********************************************************************************
+Round 256
+ROUND_ACCURACY method=FedPhoenixRG round=257 accuracy=74.830002
+********************************************************************************
+Round 257
+ROUND_ACCURACY method=FedPhoenixRG round=258 accuracy=75.800003
+********************************************************************************
+Round 258
+ROUND_ACCURACY method=FedPhoenixRG round=259 accuracy=75.199997
+********************************************************************************
+Round 259
+RG_SCORE round=260 layer=features.0 mean_q=0.155174 max_q=0.332508 fraction_q_positive=0.953125 sampling_entropy=4.156315
+RG_SCORE round=260 layer=features.3 mean_q=0.178886 max_q=0.226355 fraction_q_positive=1.000000 sampling_entropy=4.158767
+RG_SCORE round=260 layer=features.7 mean_q=0.177392 max_q=0.223231 fraction_q_positive=1.000000 sampling_entropy=4.851916
+RG_SCORE round=260 layer=features.10 mean_q=0.172383 max_q=0.217033 fraction_q_positive=1.000000 sampling_entropy=4.851953
+RG_SCORE round=260 layer=features.14 mean_q=0.174972 max_q=0.225428 fraction_q_positive=1.000000 sampling_entropy=5.545075
+RG_SCORE round=260 layer=features.17 mean_q=0.168418 max_q=0.213665 fraction_q_positive=1.000000 sampling_entropy=5.545069
+RG_SCORE round=260 layer=features.20 mean_q=0.166812 max_q=0.206965 fraction_q_positive=1.000000 sampling_entropy=5.545124
+RG_SCORE round=260 layer=features.24 mean_q=0.189125 max_q=0.239030 fraction_q_positive=1.000000 sampling_entropy=6.238227
+RG_SCORE round=260 layer=features.27 mean_q=0.187573 max_q=0.241563 fraction_q_positive=1.000000 sampling_entropy=6.238213
+RG_SCORE round=260 layer=features.30 mean_q=0.167738 max_q=0.211528 fraction_q_positive=1.000000 sampling_entropy=6.238227
+RG_SCORE round=260 layer=features.34 mean_q=0.342844 max_q=0.441739 fraction_q_positive=1.000000 sampling_entropy=6.237850
+RG_SCORE round=260 layer=features.37 mean_q=0.391767 max_q=0.522484 fraction_q_positive=1.000000 sampling_entropy=6.237729
+RG_SCORE round=260 layer=features.40 mean_q=0.300471 max_q=0.551444 fraction_q_positive=0.992188 sampling_entropy=6.234233
+ROUND_ACCURACY method=FedPhoenixRG round=260 accuracy=76.970001
+********************************************************************************
+Round 260
+ROUND_ACCURACY method=FedPhoenixRG round=261 accuracy=77.680000
+********************************************************************************
+Round 261
+ROUND_ACCURACY method=FedPhoenixRG round=262 accuracy=75.169998
+********************************************************************************
+Round 262
+ROUND_ACCURACY method=FedPhoenixRG round=263 accuracy=66.089996
+********************************************************************************
+Round 263
+ROUND_ACCURACY method=FedPhoenixRG round=264 accuracy=71.570000
+********************************************************************************
+Round 264
+ROUND_ACCURACY method=FedPhoenixRG round=265 accuracy=75.260002
+********************************************************************************
+Round 265
+ROUND_ACCURACY method=FedPhoenixRG round=266 accuracy=75.809998
+********************************************************************************
+Round 266
+ROUND_ACCURACY method=FedPhoenixRG round=267 accuracy=69.419998
+********************************************************************************
+Round 267
+ROUND_ACCURACY method=FedPhoenixRG round=268 accuracy=54.770000
+********************************************************************************
+Round 268
+ROUND_ACCURACY method=FedPhoenixRG round=269 accuracy=72.080002
+********************************************************************************
+Round 269
+ROUND_ACCURACY method=FedPhoenixRG round=270 accuracy=69.980003
+********************************************************************************
+Round 270
+ROUND_ACCURACY method=FedPhoenixRG round=271 accuracy=71.730003
+********************************************************************************
+Round 271
+ROUND_ACCURACY method=FedPhoenixRG round=272 accuracy=61.590000
+********************************************************************************
+Round 272
+ROUND_ACCURACY method=FedPhoenixRG round=273 accuracy=68.610001
+********************************************************************************
+Round 273
+ROUND_ACCURACY method=FedPhoenixRG round=274 accuracy=55.799999
+********************************************************************************
+Round 274
+ROUND_ACCURACY method=FedPhoenixRG round=275 accuracy=76.720001
+********************************************************************************
+Round 275
+ROUND_ACCURACY method=FedPhoenixRG round=276 accuracy=65.820000
+********************************************************************************
+Round 276
+ROUND_ACCURACY method=FedPhoenixRG round=277 accuracy=76.919998
+********************************************************************************
+Round 277
+ROUND_ACCURACY method=FedPhoenixRG round=278 accuracy=72.510002
+********************************************************************************
+Round 278
+ROUND_ACCURACY method=FedPhoenixRG round=279 accuracy=77.690002
+********************************************************************************
+Round 279
+RG_SCORE round=280 layer=features.0 mean_q=0.141636 max_q=0.291478 fraction_q_positive=0.968750 sampling_entropy=4.156478
+RG_SCORE round=280 layer=features.3 mean_q=0.158515 max_q=0.198866 fraction_q_positive=1.000000 sampling_entropy=4.158711
+RG_SCORE round=280 layer=features.7 mean_q=0.167414 max_q=0.206289 fraction_q_positive=1.000000 sampling_entropy=4.851946
+RG_SCORE round=280 layer=features.10 mean_q=0.162736 max_q=0.199064 fraction_q_positive=1.000000 sampling_entropy=4.851963
+RG_SCORE round=280 layer=features.14 mean_q=0.160986 max_q=0.216862 fraction_q_positive=1.000000 sampling_entropy=5.545074
+RG_SCORE round=280 layer=features.17 mean_q=0.153364 max_q=0.188886 fraction_q_positive=1.000000 sampling_entropy=5.545090
+RG_SCORE round=280 layer=features.20 mean_q=0.152453 max_q=0.195375 fraction_q_positive=1.000000 sampling_entropy=5.545111
+RG_SCORE round=280 layer=features.24 mean_q=0.170172 max_q=0.223377 fraction_q_positive=1.000000 sampling_entropy=6.238188
+RG_SCORE round=280 layer=features.27 mean_q=0.161362 max_q=0.220406 fraction_q_positive=1.000000 sampling_entropy=6.238183
+RG_SCORE round=280 layer=features.30 mean_q=0.140457 max_q=0.185341 fraction_q_positive=1.000000 sampling_entropy=6.238198
+RG_SCORE round=280 layer=features.34 mean_q=0.243518 max_q=0.405103 fraction_q_positive=1.000000 sampling_entropy=6.237205
+RG_SCORE round=280 layer=features.37 mean_q=0.194677 max_q=0.370351 fraction_q_positive=1.000000 sampling_entropy=6.236880
+RG_SCORE round=280 layer=features.40 mean_q=0.104267 max_q=0.307336 fraction_q_positive=0.960938 sampling_entropy=6.236690
+ROUND_ACCURACY method=FedPhoenixRG round=280 accuracy=75.120003
+********************************************************************************
+Round 280
+ROUND_ACCURACY method=FedPhoenixRG round=281 accuracy=69.989998
+********************************************************************************
+Round 281
+ROUND_ACCURACY method=FedPhoenixRG round=282 accuracy=67.000000
+********************************************************************************
+Round 282
+ROUND_ACCURACY method=FedPhoenixRG round=283 accuracy=73.330002
+********************************************************************************
+Round 283
+ROUND_ACCURACY method=FedPhoenixRG round=284 accuracy=76.250000
+********************************************************************************
+Round 284
+ROUND_ACCURACY method=FedPhoenixRG round=285 accuracy=72.730003
+********************************************************************************
+Round 285
+ROUND_ACCURACY method=FedPhoenixRG round=286 accuracy=63.840000
+********************************************************************************
+Round 286
+ROUND_ACCURACY method=FedPhoenixRG round=287 accuracy=74.099998
+********************************************************************************
+Round 287
+ROUND_ACCURACY method=FedPhoenixRG round=288 accuracy=69.110001
+********************************************************************************
+Round 288
+ROUND_ACCURACY method=FedPhoenixRG round=289 accuracy=73.099998
+********************************************************************************
+Round 289
+ROUND_ACCURACY method=FedPhoenixRG round=290 accuracy=77.559998
+********************************************************************************
+Round 290
+ROUND_ACCURACY method=FedPhoenixRG round=291 accuracy=75.559998
+********************************************************************************
+Round 291
+ROUND_ACCURACY method=FedPhoenixRG round=292 accuracy=71.209999
+********************************************************************************
+Round 292
+ROUND_ACCURACY method=FedPhoenixRG round=293 accuracy=74.489998
+********************************************************************************
+Round 293
+ROUND_ACCURACY method=FedPhoenixRG round=294 accuracy=73.349998
+********************************************************************************
+Round 294
+ROUND_ACCURACY method=FedPhoenixRG round=295 accuracy=50.660000
+********************************************************************************
+Round 295
+ROUND_ACCURACY method=FedPhoenixRG round=296 accuracy=73.379997
+********************************************************************************
+Round 296
+ROUND_ACCURACY method=FedPhoenixRG round=297 accuracy=75.089996
+********************************************************************************
+Round 297
+ROUND_ACCURACY method=FedPhoenixRG round=298 accuracy=53.810001
+********************************************************************************
+Round 298
+ROUND_ACCURACY method=FedPhoenixRG round=299 accuracy=71.120003
+********************************************************************************
+Round 299
+RG_SCORE round=300 layer=features.0 mean_q=0.094212 max_q=0.294049 fraction_q_positive=0.812500 sampling_entropy=4.156241
+RG_SCORE round=300 layer=features.3 mean_q=0.125927 max_q=0.219573 fraction_q_positive=0.984375 sampling_entropy=4.158039
+RG_SCORE round=300 layer=features.7 mean_q=0.125834 max_q=0.227633 fraction_q_positive=1.000000 sampling_entropy=4.851545
+RG_SCORE round=300 layer=features.10 mean_q=0.126380 max_q=0.174310 fraction_q_positive=1.000000 sampling_entropy=4.851846
+RG_SCORE round=300 layer=features.14 mean_q=0.119575 max_q=0.189690 fraction_q_positive=1.000000 sampling_entropy=5.544910
+RG_SCORE round=300 layer=features.17 mean_q=0.119856 max_q=0.179937 fraction_q_positive=1.000000 sampling_entropy=5.545013
+RG_SCORE round=300 layer=features.20 mean_q=0.121254 max_q=0.171486 fraction_q_positive=1.000000 sampling_entropy=5.545039
+RG_SCORE round=300 layer=features.24 mean_q=0.135802 max_q=0.214473 fraction_q_positive=1.000000 sampling_entropy=6.238098
+RG_SCORE round=300 layer=features.27 mean_q=0.137106 max_q=0.210731 fraction_q_positive=1.000000 sampling_entropy=6.238088
+RG_SCORE round=300 layer=features.30 mean_q=0.121026 max_q=0.174068 fraction_q_positive=1.000000 sampling_entropy=6.238128
+RG_SCORE round=300 layer=features.34 mean_q=0.221838 max_q=0.372345 fraction_q_positive=1.000000 sampling_entropy=6.236732
+RG_SCORE round=300 layer=features.37 mean_q=0.209805 max_q=0.402003 fraction_q_positive=0.994141 sampling_entropy=6.236098
+RG_SCORE round=300 layer=features.40 mean_q=0.128466 max_q=0.389490 fraction_q_positive=0.951172 sampling_entropy=6.235794
+ROUND_ACCURACY method=FedPhoenixRG round=300 accuracy=73.589996
+PEAK_ACCURACY method=FedPhoenixRG round=255 accuracy=78.410004
+Unified training metrics saved to C:\Users\admin\Desktop\need_do\new_paper_four\FedPhoenix-finish\results\training_metrics\cifar10_vgg_FedPhoenixRG_seed1_paired300_FedPhoenixRG.csv

@@ -1,6 +1,7 @@
 import matplotlib
 matplotlib.use('Agg')
 import copy
+import math
 import torch
 import random
 import torch.nn as nn
@@ -22,6 +23,7 @@ def reset_kernels_for_task(
     at_least_one=True,
     current_iter=None,
     conv_transition_period=None,
+    sampling_weights=None,
 ):
     """Apply a deterministic FedPhoenix-style reset and return its task trace.
 
@@ -127,7 +129,12 @@ def reset_kernels_for_task(
             if reset_ratio > 0 and at_least_one:
                 num_reset = max(1, num_reset)
             num_reset = min(num_kernels, num_reset)
-            reset_indices = sorted(python_rng.sample(range(num_kernels), num_reset))
+            layer_weights = None
+            if sampling_weights is not None:
+                layer_weights = sampling_weights.get(name)
+            reset_indices = _sample_kernel_indices(
+                num_kernels, num_reset, layer_weights, python_rng
+            )
 
             mean = layer.weight.data.mean().item()
             std = layer.weight.data.std().item()
@@ -175,6 +182,43 @@ def reset_kernels_for_task(
         len(layer_trace["reset_indices"]) for layer_trace in trace["layers"]
     )
     return trace
+
+
+def _sample_kernel_indices(num_kernels, num_reset, weights, python_rng):
+    """Task-private weighted sampling without replacement.
+
+    Missing, invalid, zero, or constant weights use the original
+    ``random.Random.sample`` path.  The constant case makes q=0 exactly match
+    uniform FedPhoenix for the same task seed.
+    """
+    if weights is None:
+        return sorted(python_rng.sample(range(num_kernels), num_reset))
+    try:
+        values = [float(item) for item in torch.as_tensor(weights).flatten().tolist()]
+    except (TypeError, ValueError, RuntimeError):
+        values = []
+    valid = (
+        len(values) == num_kernels
+        and all(math.isfinite(item) and item >= 0.0 for item in values)
+        and sum(values) > 0.0
+    )
+    if not valid or max(values) == min(values):
+        return sorted(python_rng.sample(range(num_kernels), num_reset))
+    if num_reset == 0:
+        return []
+    positive = sum(item > 0.0 for item in values)
+    if positive < num_reset:
+        return sorted(python_rng.sample(range(num_kernels), num_reset))
+
+    # Efraimidis-Spirakis exponential keys: the smallest independent
+    # -log(U)/w values form an exact weighted sample without replacement.
+    keys = [
+        (-math.log(max(python_rng.random(), 1e-300)) / weight, index)
+        for index, weight in enumerate(values)
+        if weight > 0.0
+    ]
+    keys.sort()
+    return sorted(index for _key, index in keys[:num_reset])
 
 def get_reset_probability(current_round, m, p, initial_mu):
     """计算当前轮次的Reset概率"""

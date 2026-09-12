@@ -36,6 +36,7 @@ ALIASES = {
     "FedGen": "FedGen",
     "FedPhoenix": "FedPhoenix",
     "FedCRSI": "FedCRSI",
+    "FedPhoenixRG": "FedPhoenixRG",
 }
 PARTITION_FILE = os.path.join("data", "cifar10_100_noniidCase5_beta0.3.json")
 
@@ -65,6 +66,8 @@ def parse_args():
                         choices=["ram", "memmap"],
                         help="memmap keeps the ~11 GB of VGG observations on disk")
     parser.add_argument("--crsi-dry-run", type=int, default=0, choices=[0, 1])
+    parser.add_argument("--rg-interval", type=int, default=20)
+    parser.add_argument("--rg-strength", type=float, default=1.0)
     parser.add_argument("--gpu", type=int, default=0)
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--dry-run", action="store_true")
@@ -146,6 +149,11 @@ def build_command(method, args):
 
 def method_specific_flags(method, args):
     """Only the proposed method receives extra flags; baselines are untouched."""
+    if method == "FedPhoenixRG":
+        return [
+            "--rg_interval", str(args.rg_interval),
+            "--rg_strength", str(args.rg_strength),
+        ]
     if method != "FedCRSI":
         return []
     # store dtype is deliberately not exposed: reported runs use float32
@@ -230,6 +238,14 @@ def main():
                 "store_dtype": "float32",
                 "store_backend": args.crsi_store_backend,
                 "dry_run": args.crsi_dry_run,
+            },
+            "fedphoenix_rg": {
+                "interval": args.rg_interval,
+                "strength": args.rg_strength,
+                "reset_ratio": 0.015625,
+                "conv_transition_rounds": 1000,
+                "reset_method": "ori_normal",
+                "seed": args.seed,
             },
             "evaluation": (
                 "original per-method evaluation loop on the complete 10000-sample "

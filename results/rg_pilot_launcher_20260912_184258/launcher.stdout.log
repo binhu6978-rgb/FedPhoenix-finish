@@ -1,0 +1,7 @@
+Client partition data\cifar10_100_noniidCase5_beta0.3.json sha256=ffa71f5432b8905bf13117d30fe3c981090aa3fa1e93e0a1c179be4f8bb5d882
+Starting FedPhoenix; logs: C:\Users\admin\Desktop\need_do\new_paper_four\FedPhoenix-finish\results\six_baselines_logs\20260912_184258\FedPhoenix.stdout.log
+ROUND_ACCURACY method=FedPhoenix round=1 accuracy=10.000000
+ROUND_ACCURACY method=FedPhoenix round=2 accuracy=13.230000
+ROUND_ACCURACY method=FedPhoenix round=3 accuracy=12.230000
+ROUND_ACCURACY method=FedPhoenix round=4 accuracy=16.290001
+ROUND_ACCURACY method=FedPhoenix round=5 accuracy=32.419998

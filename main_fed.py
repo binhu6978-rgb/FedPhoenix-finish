@@ -33,6 +33,10 @@ from Algorithm.Training_FedGen import FedGen
 
 from Algorithm.Training_FedMut import FedMut
 from Algorithm.Training_FedCRSI import FedCRSI
+from Algorithm.repeatability_guidance import (
+    RepeatabilityGuidance,
+    sampling_weights_from_scores,
+)
 from Algorithm.RecoveryAware import (
     build_recovery_score_matrix,
     confidence_gate_assignment,
@@ -67,7 +71,9 @@ def _metrics_stem(args):
     )
 
 
-def _build_fedphoenix_tasks(net_glob, round_idx, task_count, args):
+def _build_fedphoenix_tasks(
+    net_glob, round_idx, task_count, args, sampling_weights=None
+):
     """Build a deterministic task bank shared by baseline and proposed method."""
     task_models = []
     task_traces = []
@@ -88,6 +94,7 @@ def _build_fedphoenix_tasks(net_glob, round_idx, task_count, args):
             at_least_one=False,
             current_iter=round_idx,
             conv_transition_period=args.FP_conv,
+            sampling_weights=sampling_weights,
         )
         task_models.append(task_model)
         task_traces.append(trace)
@@ -324,6 +331,123 @@ def FedPhoenix(
         del task_models
         if args.device.type == "cuda":
             torch.cuda.empty_cache()
+    print_peak_accuracy(acc, args.algorithm)
+    _write_training_metrics(args, metrics_rows)
+
+
+def FedPhoenixRG(
+    net_glob,
+    dataset_train,
+    dataset_validation,
+    dataset_test,
+    dict_users,
+):
+    """FedPhoenix with cross-round repeatability-guided reset placement."""
+    if args.rg_interval < 2:
+        raise ValueError("rg_interval must be at least 2")
+    if args.rg_strength < 0:
+        raise ValueError("rg_strength must be non-negative")
+
+    net_glob.train()
+    acc = []
+    metrics_rows = []
+    args.density_local = 0.01
+    guidance = RepeatabilityGuidance(net_glob)
+    sampling_weights = None
+
+    for iter in range(args.epochs):
+        round_start = time.perf_counter()
+        if args.density_local > 1 or args.density_local < 0:
+            args.density_local = 0
+
+        print('*' * 80)
+        print('Round {:3d}'.format(iter))
+
+        w_locals = []
+        lens = []
+        m = max(int(args.frac * args.num_users), 1)
+        idxs_users = np.random.choice(range(args.num_users), m, replace=False)
+        global_before_reset = {
+            key: value.detach().to(device="cpu", dtype=torch.float32).clone()
+            for key, value in net_glob.state_dict().items()
+            if key.endswith(".weight") and value.ndim == 4
+        }
+        task_models, task_traces = _build_fedphoenix_tasks(
+            net_glob, iter, m, args, sampling_weights=sampling_weights
+        )
+        assignments = []
+        for task_id, idx in enumerate(idxs_users):
+            net_local = copy.deepcopy(task_models[task_id]).to(args.device)
+            local = LocalUpdate_FedAvg(
+                args=args,
+                dataset=dataset_train,
+                idxs=dict_users[idx],
+                dataset_test=dataset_test,
+            )
+            w = local.train(net=net_local)
+            w_locals.append(copy.deepcopy(w))
+            lens.append(len(dict_users[idx]))
+            assignments.append({"client_id": int(idx), "task_id": int(task_id)})
+
+        guidance.observe_round(
+            global_before_reset, w_locals, idxs_users.tolist(), task_traces
+        )
+        del global_before_reset
+
+        w_glob = Aggregation(w_locals, lens)
+        net_glob.load_state_dict(w_glob)
+
+        refreshed = False
+        if (iter + 1) % args.rg_interval == 0:
+            scores = guidance.finalize_window()
+            sampling_weights = sampling_weights_from_scores(
+                scores, args.rg_strength
+            )
+            for layer_name, score in scores.items():
+                weights = sampling_weights[layer_name]
+                probability = weights / weights.sum()
+                entropy = float(
+                    -(probability * probability.clamp_min(1e-300).log()).sum()
+                )
+                print(
+                    f"RG_SCORE round={iter + 1} layer={layer_name} "
+                    f"mean_q={float(score.double().mean()):.6f} "
+                    f"max_q={float(score.max()):.6f} "
+                    f"fraction_q_positive={float((score > 0).double().mean()):.6f} "
+                    f"sampling_entropy={entropy:.6f}",
+                    flush=True,
+                )
+            guidance.reset_window()
+            refreshed = True
+
+        round_train_seconds = time.perf_counter() - round_start
+        item_acc = evaluate_round_accuracy(
+            net_glob, dataset_test, args, iter + 1
+        )
+        acc.append(item_acc)
+        metrics_rows.append(
+            {
+                "round": int(iter + 1),
+                "algorithm": args.algorithm,
+                "seed": int(args.seed),
+                "test_accuracy": item_acc,
+                "round_train_seconds": float(round_train_seconds),
+                "matching_seconds": 0.0,
+                "selected_clients": json.dumps(
+                    [int(item) for item in idxs_users.tolist()]
+                ),
+                "assignments": json.dumps(assignments),
+                "task_seeds": json.dumps(
+                    [int(trace["seed"]) for trace in task_traces]
+                ),
+                "guidance_active": int(sampling_weights is not None),
+                "guidance_refreshed": int(refreshed),
+            }
+        )
+        del task_models
+        if args.device.type == "cuda":
+            torch.cuda.empty_cache()
+
     print_peak_accuracy(acc, args.algorithm)
     _write_training_metrics(args, metrics_rows)
 
@@ -903,6 +1027,14 @@ if __name__ == '__main__':
         FedCRSI(args, net_glob, dataset_train, dataset_final_test, dict_users)
     elif args.algorithm == 'FedPhoenix':
         FedPhoenix(
+            net_glob,
+            dataset_train,
+            dataset_validation,
+            dataset_final_test,
+            dict_users,
+        )
+    elif args.algorithm == 'FedPhoenixRG':
+        FedPhoenixRG(
             net_glob,
             dataset_train,
             dataset_validation,

@@ -179,5 +179,11 @@ def args_parser():
     parser.add_argument("--crsi_log_dir", type=str, default="results/crsi_diagnostics",
                         help="directory for per-interval diagnosis records")
 
+    # FedPhoenixRG: soft repeatability guidance for reset placement
+    parser.add_argument("--rg_interval", type=int, default=20,
+                        help="rounds per repeatability scoring window")
+    parser.add_argument("--rg_strength", type=float, default=1.0,
+                        help="soft reset-weight strength: w = 1 + strength * q")
+
     args = parser.parse_args()
     return args
