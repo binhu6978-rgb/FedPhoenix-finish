@@ -1,0 +1,30 @@
+{
+  "status": "complete",
+  "started_at": "2026-09-12T23:21:35.2004562+08:00",
+  "metric": "peak_accuracy",
+  "runs": [
+    {
+      "mix": "0.50",
+      "epochs": 1200,
+      "pid": 15804,
+      "stdout": "C:\\Users\\admin\\Desktop\\need_do\\new_paper_four\\FedPhoenix-finish\\results\\mix050_1200.stdout.log",
+      "stderr": "C:\\Users\\admin\\Desktop\\need_do\\new_paper_four\\FedPhoenix-finish\\results\\mix050_1200.stderr.log",
+      "status": "complete",
+      "completed_rounds": 1200,
+      "peak_accuracy": 83.010002,
+      "peak_round": 987
+    },
+    {
+      "mix": "0.75",
+      "epochs": 1200,
+      "pid": 20100,
+      "stdout": "C:\\Users\\admin\\Desktop\\need_do\\new_paper_four\\FedPhoenix-finish\\results\\mix075_1200.stdout.log",
+      "stderr": "C:\\Users\\admin\\Desktop\\need_do\\new_paper_four\\FedPhoenix-finish\\results\\mix075_1200.stderr.log",
+      "status": "complete",
+      "completed_rounds": 1200,
+      "peak_accuracy": 83.43,
+      "peak_round": 984
+    }
+  ],
+  "completed_at": "2026-09-13T11:50:18.6639915+08:00"
+}
