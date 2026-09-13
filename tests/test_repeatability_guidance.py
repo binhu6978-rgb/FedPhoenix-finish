@@ -6,6 +6,7 @@ import torch.nn as nn
 
 from Algorithm.repeatability_guidance import (
     RepeatabilityGuidance,
+    layer_calibrated_sampling_weights,
     sampling_weights_from_scores,
 )
 
@@ -120,3 +121,47 @@ def test_zero_scores_fall_back_to_uniform_probabilities():
         {"layer": torch.zeros(5)}, 0.75
     )["layer"]
     assert torch.equal(probability, torch.full((5,), 0.2, dtype=torch.float64))
+
+
+def test_layer_calibration_uses_reset_budget_weighted_signal_strength():
+    scores = {
+        "weak": torch.tensor([0.0, 0.2]),
+        "strong": torch.tensor([0.2, 0.6]),
+    }
+    weights, diagnostics = layer_calibrated_sampling_weights(
+        scores, {"weak": 1, "strong": 3}, base_mix=0.75
+    )
+
+    assert abs(diagnostics["s_bar"] - 0.325) < 1e-7
+    assert abs(diagnostics["gamma"]["weak"] - 0.75 * 0.1 / 0.325) < 1e-7
+    assert abs(diagnostics["gamma"]["strong"] - 0.75) < 1e-7
+    for probability in weights.values():
+        assert torch.isclose(
+            probability.sum(), torch.tensor(1.0, dtype=torch.float64)
+        )
+        assert bool((probability >= 0).all())
+
+
+def test_layer_calibration_uniform_fallback_and_eligible_diagnostics():
+    model = _model(filters=3)
+    guidance = RepeatabilityGuidance(model)
+    global_state = _state(model, [0.0, 0.0, 0.0])
+    local_states = [
+        _state(model, [1.0, 2.0, 3.0]),
+        _state(model, [-1.0, -2.0, -3.0]),
+    ]
+    guidance.observe_round(global_state, local_states, [0, 1], [_trace(0), _trace()])
+    guidance.observe_round(global_state, local_states, [0, 1], [_trace(0), _trace()])
+    scores = guidance.finalize_window()
+    eligible = guidance.get_layer_diagnostics()["0"]
+    probability, calibration = layer_calibrated_sampling_weights(
+        {"0": torch.zeros(3)}, {"0": 1}, base_mix=0.75
+    )
+
+    assert scores["0"].shape == (3,)
+    assert eligible["mean_eligible_clients"] == 4 / 3
+    assert eligible["min_eligible_clients"] == 0
+    assert calibration["gamma"]["0"] == 0.0
+    assert torch.equal(
+        probability["0"], torch.full((3,), 1 / 3, dtype=torch.float64)
+    )

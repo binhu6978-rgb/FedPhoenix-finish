@@ -7,6 +7,7 @@ import torch.nn as nn
 
 import main_fed
 from Algorithm.Phoenix_util import reset_kernels_for_task
+from Algorithm.repeatability_guidance import RepeatabilityGuidance
 
 
 _ORIGINAL_BUILD_TASKS = main_fed._build_fedphoenix_tasks
@@ -59,6 +60,25 @@ def test_guidance_keeps_reset_budget_and_stair_schedule():
         assert [len(x["reset_indices"]) for x in guided["layers"]] == [
             len(x["reset_indices"]) for x in plain["layers"]
         ]
+
+
+def test_lc_calibration_budget_matches_original_reset_schedule():
+    base = _two_layer_model()
+    layers = RepeatabilityGuidance(base).layers
+    args = SimpleNamespace(reset=0.25, FP_conv=100)
+    for round_id in [0, 30, 60, 100]:
+        expected = reset_kernels_for_task(
+            copy.deepcopy(base), 0.25, 44,
+            at_least_one=False, current_iter=round_id,
+            conv_transition_period=100,
+        )
+        actual = main_fed._active_fedphoenix_reset_counts(
+            layers, round_id, args
+        )
+        assert actual == {
+            layer["name"]: len(layer["reset_indices"])
+            for layer in expected["layers"]
+        }
 
 
 def test_guided_tasks_keep_independent_reset_patterns():
@@ -138,6 +158,8 @@ def _run(method, initial_state, monkeypatch):
     np.random.seed(args.seed)
     if method == "FedPhoenix":
         main_fed.FedPhoenix(model, None, None, None, users)
+    elif method == "FedPhoenixRG-LC":
+        main_fed.FedPhoenixRGLC(model, None, None, None, users)
     else:
         main_fed.FedPhoenixRG(model, None, None, None, users)
     return copy.deepcopy(model.state_dict()), captured, reset_traces
@@ -165,3 +187,27 @@ def test_first_twenty_rounds_are_exactly_fedphoenix(monkeypatch):
     ]
     for key, value in baseline_state.items():
         assert torch.equal(value, guided_state[key]), key
+
+
+def test_lc_first_twenty_rounds_are_exactly_fedphoenix(monkeypatch):
+    torch.manual_seed(9)
+    initial_state = _TinyNet().state_dict()
+    baseline_state, baseline_rows, baseline_traces = _run(
+        "FedPhoenix", initial_state, monkeypatch
+    )
+    lc_state, lc_rows, lc_traces = _run(
+        "FedPhoenixRG-LC", initial_state, monkeypatch
+    )
+
+    assert [row["selected_clients"] for row in baseline_rows] == [
+        row["selected_clients"] for row in lc_rows
+    ]
+    assert [row["task_seeds"] for row in baseline_rows] == [
+        row["task_seeds"] for row in lc_rows
+    ]
+    assert baseline_traces == lc_traces
+    assert [row["test_accuracy"] for row in baseline_rows] == [
+        row["test_accuracy"] for row in lc_rows
+    ]
+    for key, value in baseline_state.items():
+        assert torch.equal(value, lc_state[key]), key

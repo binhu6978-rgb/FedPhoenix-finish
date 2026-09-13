@@ -35,6 +35,7 @@ from Algorithm.Training_FedMut import FedMut
 from Algorithm.Training_FedCRSI import FedCRSI
 from Algorithm.repeatability_guidance import (
     RepeatabilityGuidance,
+    layer_calibrated_sampling_weights,
     sampling_weights_from_scores,
 )
 from Algorithm.RecoveryAware import (
@@ -99,6 +100,19 @@ def _build_fedphoenix_tasks(
         task_models.append(task_model)
         task_traces.append(trace)
     return task_models, task_traces
+
+
+def _active_fedphoenix_reset_counts(layers, current_iter, args):
+    """Original per-layer reset counts for the next FedPhoenix round."""
+    total_layers = len(layers)
+    counts = {}
+    for depth, (name, _state_key, output_filters) in enumerate(layers):
+        stop_iter = (depth + 1) * (float(args.FP_conv) / total_layers)
+        if current_iter < stop_iter:
+            count = min(output_filters, int(output_filters * args.reset))
+            if count > 0:
+                counts[name] = count
+    return counts
 
 
 def _write_training_metrics(args, rows):
@@ -450,6 +464,135 @@ def FedPhoenixRG(
                 ),
                 "guidance_active": int(sampling_weights is not None),
                 "guidance_refreshed": int(refreshed),
+            }
+        )
+        del task_models
+        if args.device.type == "cuda":
+            torch.cuda.empty_cache()
+
+    print_peak_accuracy(acc, args.algorithm)
+    _write_training_metrics(args, metrics_rows)
+
+
+def FedPhoenixRGLC(
+    net_glob,
+    dataset_train,
+    dataset_validation,
+    dataset_test,
+    dict_users,
+):
+    """FedPhoenixRG with reset-budget-weighted layer calibration."""
+    if args.rg_interval < 2:
+        raise ValueError("rg_interval must be at least 2")
+    if not 0.0 <= args.rg_mix <= 1.0:
+        raise ValueError("rg_mix must be in [0, 1]")
+
+    net_glob.train()
+    acc = []
+    metrics_rows = []
+    args.density_local = 0.01
+    guidance = RepeatabilityGuidance(net_glob)
+    sampling_weights = None
+
+    for iter in range(args.epochs):
+        round_start = time.perf_counter()
+        if args.density_local > 1 or args.density_local < 0:
+            args.density_local = 0
+
+        print('*' * 80)
+        print('Round {:3d}'.format(iter))
+
+        w_locals = []
+        lens = []
+        m = max(int(args.frac * args.num_users), 1)
+        idxs_users = np.random.choice(range(args.num_users), m, replace=False)
+        global_before_reset = {
+            key: value.detach().to(device="cpu", dtype=torch.float32).clone()
+            for key, value in net_glob.state_dict().items()
+            if key.endswith(".weight") and value.ndim == 4
+        }
+        task_models, task_traces = _build_fedphoenix_tasks(
+            net_glob, iter, m, args, sampling_weights=sampling_weights
+        )
+        assignments = []
+        for task_id, idx in enumerate(idxs_users):
+            net_local = copy.deepcopy(task_models[task_id]).to(args.device)
+            local = LocalUpdate_FedAvg(
+                args=args,
+                dataset=dataset_train,
+                idxs=dict_users[idx],
+                dataset_test=dataset_test,
+            )
+            w = local.train(net=net_local)
+            w_locals.append(copy.deepcopy(w))
+            lens.append(len(dict_users[idx]))
+            assignments.append({"client_id": int(idx), "task_id": int(task_id)})
+
+        guidance.observe_round(
+            global_before_reset, w_locals, idxs_users.tolist(), task_traces
+        )
+        del global_before_reset
+
+        w_glob = Aggregation(w_locals, lens)
+        net_glob.load_state_dict(w_glob)
+
+        refreshed = False
+        if (iter + 1) % args.rg_interval == 0:
+            scores = guidance.finalize_window()
+            eligible = guidance.get_layer_diagnostics()
+            reset_counts = _active_fedphoenix_reset_counts(
+                guidance.layers, iter + 1, args
+            )
+            sampling_weights, calibration = layer_calibrated_sampling_weights(
+                scores, reset_counts, base_mix=args.rg_mix
+            )
+            for layer_name in reset_counts:
+                score = scores[layer_name]
+                probability = sampling_weights[layer_name]
+                entropy = float(
+                    -(probability * probability.clamp_min(1e-300).log()).sum()
+                )
+                uniform_entropy = math.log(probability.numel())
+                layer_eligible = eligible[layer_name]
+                print(
+                    f"RG_LC_SCORE round={iter + 1} layer={layer_name} "
+                    f"mean_q={calibration['mean_q'][layer_name]:.6f} "
+                    f"S_bar={calibration['s_bar']:.6f} "
+                    f"gamma_l={calibration['gamma'][layer_name]:.6f} "
+                    f"mean_eligible_clients="
+                    f"{layer_eligible['mean_eligible_clients']:.6f} "
+                    f"min_eligible_clients="
+                    f"{layer_eligible['min_eligible_clients']} "
+                    f"sampling_entropy={entropy:.6f} "
+                    f"uniform_entropy={uniform_entropy:.6f}",
+                    flush=True,
+                )
+            guidance.reset_window()
+            refreshed = True
+
+        round_train_seconds = time.perf_counter() - round_start
+        item_acc = evaluate_round_accuracy(
+            net_glob, dataset_test, args, iter + 1
+        )
+        acc.append(item_acc)
+        metrics_rows.append(
+            {
+                "round": int(iter + 1),
+                "algorithm": args.algorithm,
+                "seed": int(args.seed),
+                "test_accuracy": item_acc,
+                "round_train_seconds": float(round_train_seconds),
+                "matching_seconds": 0.0,
+                "selected_clients": json.dumps(
+                    [int(item) for item in idxs_users.tolist()]
+                ),
+                "assignments": json.dumps(assignments),
+                "task_seeds": json.dumps(
+                    [int(trace["seed"]) for trace in task_traces]
+                ),
+                "guidance_active": int(sampling_weights is not None),
+                "guidance_refreshed": int(refreshed),
+                "layer_calibrated": 1,
             }
         )
         del task_models
@@ -1043,6 +1186,14 @@ if __name__ == '__main__':
         )
     elif args.algorithm == 'FedPhoenixRG':
         FedPhoenixRG(
+            net_glob,
+            dataset_train,
+            dataset_validation,
+            dataset_final_test,
+            dict_users,
+        )
+    elif args.algorithm == 'FedPhoenixRG-LC':
+        FedPhoenixRGLC(
             net_glob,
             dataset_train,
             dataset_validation,

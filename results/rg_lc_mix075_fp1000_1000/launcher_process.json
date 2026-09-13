@@ -1,0 +1,7 @@
+{
+  "process_id": 58120,
+  "started_at": "2026-09-13T16:43:51.1286603+08:00",
+  "command": "D:\\software\\minicoonda\\envs\\fd\\python.exe -u train_five_baselines.py --methods FedPhoenixRG-LC --epochs 1000 --model vgg --rg-interval 20 --rg-mix 0.75 --gpu 0 --seed 1 --stop-on-error --log-root results/rg_lc_mix075_fp1000_1000",
+  "stdout": "C:\\Users\\admin\\Desktop\\need_do\\new_paper_four\\FedPhoenix-finish\\results\\rg_lc_mix075_fp1000_1000\\launcher.stdout.log",
+  "stderr": "C:\\Users\\admin\\Desktop\\need_do\\new_paper_four\\FedPhoenix-finish\\results\\rg_lc_mix075_fp1000_1000\\launcher.stderr.log"
+}

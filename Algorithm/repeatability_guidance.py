@@ -8,6 +8,7 @@ CPU, so observing or finalizing a window cannot perturb the training RNGs.
 from __future__ import annotations
 
 from collections import defaultdict
+import math
 
 import torch
 import torch.nn as nn
@@ -33,6 +34,7 @@ class RepeatabilityGuidance:
             raise ValueError("the model has no convolutional layers")
         self.epsilon = float(epsilon)
         self._scores = {}
+        self._diagnostics = {}
         self.reset_window()
 
     def reset_window(self):
@@ -127,6 +129,7 @@ class RepeatabilityGuidance:
     def finalize_window(self):
         """Compute client-balanced ``q_g = clip([R_g]+/(E_g+eps), 0, 1)``."""
         scores = {}
+        diagnostics = {}
         for layer_name, _state_key, output_filters in self.layers:
             repeat_sum = torch.zeros(output_filters, dtype=torch.float64)
             energy_sum = torch.zeros(output_filters, dtype=torch.float64)
@@ -158,12 +161,21 @@ class RepeatabilityGuidance:
                 / (energy[present] + self.epsilon)
             ).clamp_(0.0, 1.0).float()
             scores[layer_name] = score
+            diagnostics[layer_name] = {
+                "mean_eligible_clients": float(eligible_clients.double().mean()),
+                "min_eligible_clients": int(eligible_clients.min()),
+            }
         self._scores = scores
+        self._diagnostics = diagnostics
         return self.get_layer_scores()
 
     def get_layer_scores(self):
         """Return independent copies of the most recently finalized q scores."""
         return {name: score.clone() for name, score in self._scores.items()}
+
+    def get_layer_diagnostics(self):
+        """Return eligible-client summaries from the last finalized window."""
+        return {name: dict(values) for name, values in self._diagnostics.items()}
 
 
 def sampling_weights_from_scores(scores, mix, epsilon=1e-12):
@@ -189,3 +201,57 @@ def sampling_weights_from_scores(scores, mix, epsilon=1e-12):
             probability = (1.0 - mix) * uniform + mix * (score / total)
         weights[name] = probability
     return weights
+
+
+def layer_calibrated_sampling_weights(
+    scores, reset_counts, base_mix=0.75, epsilon=1e-12
+):
+    """Apply reset-budget-weighted layer calibration to the existing q scores."""
+    base_mix = float(base_mix)
+    if not 0.0 <= base_mix <= 1.0:
+        raise ValueError("base_mix must be in [0, 1]")
+    mean_q = {
+        name: float(torch.as_tensor(score, dtype=torch.float64).mean())
+        for name, score in scores.items()
+    }
+    active_budget = {
+        name: int(count)
+        for name, count in reset_counts.items()
+        if int(count) > 0 and name in scores
+    }
+    total_budget = sum(active_budget.values())
+    s_bar = (
+        sum(active_budget[name] * mean_q[name] for name in active_budget)
+        / total_budget
+        if total_budget
+        else 0.0
+    )
+
+    weights = {}
+    gamma = {}
+    for name, raw_score in scores.items():
+        score = torch.as_tensor(raw_score, dtype=torch.float64).clamp_min(0.0)
+        if score.numel() == 0:
+            raise ValueError("repeatability score tensors must be non-empty")
+        uniform = torch.full_like(score, 1.0 / score.numel())
+        total = score.sum()
+        layer_gamma = 0.0
+        if (
+            name in active_budget
+            and math.isfinite(s_bar)
+            and s_bar > float(epsilon)
+            and torch.isfinite(total)
+            and float(total) > float(epsilon)
+        ):
+            layer_gamma = base_mix * min(
+                1.0, mean_q[name] / (s_bar + float(epsilon))
+            )
+            probability = (
+                (1.0 - layer_gamma) * uniform
+                + layer_gamma * (score / total)
+            )
+        else:
+            probability = uniform
+        weights[name] = probability
+        gamma[name] = float(layer_gamma)
+    return weights, {"s_bar": float(s_bar), "mean_q": mean_q, "gamma": gamma}

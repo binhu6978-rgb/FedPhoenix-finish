@@ -37,6 +37,7 @@ ALIASES = {
     "FedPhoenix": "FedPhoenix",
     "FedCRSI": "FedCRSI",
     "FedPhoenixRG": "FedPhoenixRG",
+    "FedPhoenixRG-LC": "FedPhoenixRG-LC",
 }
 PARTITION_FILE = os.path.join("data", "cifar10_100_noniidCase5_beta0.3.json")
 
@@ -149,7 +150,7 @@ def build_command(method, args):
 
 def method_specific_flags(method, args):
     """Only the proposed method receives extra flags; baselines are untouched."""
-    if method == "FedPhoenixRG":
+    if method in {"FedPhoenixRG", "FedPhoenixRG-LC"}:
         return [
             "--rg_interval", str(args.rg_interval),
             "--rg_mix", str(args.rg_mix),
