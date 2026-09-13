@@ -1,0 +1,38 @@
+{
+  "status": "complete",
+  "started_at": "2026-09-13T12:23:33.8987307+08:00",
+  "metric": "peak_accuracy",
+  "reference": {
+    "FedPhoenix": 82.61,
+    "current_best": 83.43
+  },
+  "runs": [
+    {
+      "experiment": "A",
+      "epochs": 1000,
+      "rg_mix": 0.75,
+      "FP_conv": 900,
+      "pid": 37508,
+      "stdout": "C:\\Users\\admin\\Desktop\\need_do\\new_paper_four\\FedPhoenix-finish\\results\\mix075_fp900_1000.stdout.log",
+      "stderr": "C:\\Users\\admin\\Desktop\\need_do\\new_paper_four\\FedPhoenix-finish\\results\\mix075_fp900_1000.stderr.log",
+      "status": "complete",
+      "completed_rounds": 1000,
+      "peak_accuracy": 82.970001,
+      "peak_round": 1000
+    },
+    {
+      "experiment": "B",
+      "epochs": 1000,
+      "rg_mix": 0.9,
+      "FP_conv": 1000,
+      "pid": 31440,
+      "stdout": "C:\\Users\\admin\\Desktop\\need_do\\new_paper_four\\FedPhoenix-finish\\results\\mix090_fp1000_1000.stdout.log",
+      "stderr": "C:\\Users\\admin\\Desktop\\need_do\\new_paper_four\\FedPhoenix-finish\\results\\mix090_fp1000_1000.stderr.log",
+      "status": "complete",
+      "completed_rounds": 1000,
+      "peak_accuracy": 82.300003,
+      "peak_round": 850
+    }
+  ],
+  "completed_at": "2026-09-13T15:54:18.4981286+08:00"
+}
