@@ -203,6 +203,29 @@ def sampling_weights_from_scores(scores, mix, epsilon=1e-12):
     return weights
 
 
+def remap_repeatability_scores(scores, mode, previous_scores=None):
+    """Remap finalized q without changing its estimator or window statistics."""
+    if mode not in {"excess", "persistent"}:
+        raise ValueError("mode must be excess or persistent")
+    remapped = {}
+    for name, raw_score in scores.items():
+        score = torch.as_tensor(raw_score, dtype=torch.float64).clamp_min(0.0)
+        if mode == "excess":
+            remapped[name] = (score - score.mean()).clamp_min(0.0)
+        elif previous_scores is None:
+            remapped[name] = score.clone()
+        else:
+            if name not in previous_scores:
+                raise ValueError(f"previous scores missing layer {name}")
+            previous = torch.as_tensor(
+                previous_scores[name], dtype=torch.float64
+            ).clamp_min(0.0)
+            if previous.shape != score.shape:
+                raise ValueError(f"previous score shape differs for {name}")
+            remapped[name] = (score * previous).sqrt()
+    return remapped
+
+
 def layer_calibrated_sampling_weights(
     scores, reset_counts, base_mix=0.75, epsilon=1e-12
 ):

@@ -36,6 +36,7 @@ from Algorithm.Training_FedCRSI import FedCRSI
 from Algorithm.repeatability_guidance import (
     RepeatabilityGuidance,
     layer_calibrated_sampling_weights,
+    remap_repeatability_scores,
     sampling_weights_from_scores,
 )
 from Algorithm.RecoveryAware import (
@@ -439,6 +440,166 @@ def FedPhoenixRG(
                     f"{float(probability.min() / uniform_probability):.6f}",
                     flush=True,
                 )
+            guidance.reset_window()
+            refreshed = True
+
+        round_train_seconds = time.perf_counter() - round_start
+        item_acc = evaluate_round_accuracy(
+            net_glob, dataset_test, args, iter + 1
+        )
+        acc.append(item_acc)
+        metrics_rows.append(
+            {
+                "round": int(iter + 1),
+                "algorithm": args.algorithm,
+                "seed": int(args.seed),
+                "test_accuracy": item_acc,
+                "round_train_seconds": float(round_train_seconds),
+                "matching_seconds": 0.0,
+                "selected_clients": json.dumps(
+                    [int(item) for item in idxs_users.tolist()]
+                ),
+                "assignments": json.dumps(assignments),
+                "task_seeds": json.dumps(
+                    [int(trace["seed"]) for trace in task_traces]
+                ),
+                "guidance_active": int(sampling_weights is not None),
+                "guidance_refreshed": int(refreshed),
+            }
+        )
+        del task_models
+        if args.device.type == "cuda":
+            torch.cuda.empty_cache()
+
+    print_peak_accuracy(acc, args.algorithm)
+    _write_training_metrics(args, metrics_rows)
+
+
+def FedPhoenixRGRemapped(
+    net_glob,
+    dataset_train,
+    dataset_validation,
+    dataset_test,
+    dict_users,
+    mode,
+):
+    """FedPhoenixRG training with only the refresh-time q mapping changed."""
+    if mode not in {"excess", "persistent"}:
+        raise ValueError("mode must be excess or persistent")
+    if args.rg_interval < 2:
+        raise ValueError("rg_interval must be at least 2")
+    if not 0.0 <= args.rg_mix <= 1.0:
+        raise ValueError("rg_mix must be in [0, 1]")
+
+    net_glob.train()
+    acc = []
+    metrics_rows = []
+    args.density_local = 0.01
+    guidance = RepeatabilityGuidance(net_glob)
+    sampling_weights = None
+    previous_scores = None
+
+    for iter in range(args.epochs):
+        round_start = time.perf_counter()
+        if args.density_local > 1 or args.density_local < 0:
+            args.density_local = 0
+
+        print('*' * 80)
+        print('Round {:3d}'.format(iter))
+
+        w_locals = []
+        lens = []
+        m = max(int(args.frac * args.num_users), 1)
+        idxs_users = np.random.choice(range(args.num_users), m, replace=False)
+        global_before_reset = {
+            key: value.detach().to(device="cpu", dtype=torch.float32).clone()
+            for key, value in net_glob.state_dict().items()
+            if key.endswith(".weight") and value.ndim == 4
+        }
+        task_models, task_traces = _build_fedphoenix_tasks(
+            net_glob, iter, m, args, sampling_weights=sampling_weights
+        )
+        assignments = []
+        for task_id, idx in enumerate(idxs_users):
+            net_local = copy.deepcopy(task_models[task_id]).to(args.device)
+            local = LocalUpdate_FedAvg(
+                args=args,
+                dataset=dataset_train,
+                idxs=dict_users[idx],
+                dataset_test=dataset_test,
+            )
+            w = local.train(net=net_local)
+            w_locals.append(copy.deepcopy(w))
+            lens.append(len(dict_users[idx]))
+            assignments.append({"client_id": int(idx), "task_id": int(task_id)})
+
+        guidance.observe_round(
+            global_before_reset, w_locals, idxs_users.tolist(), task_traces
+        )
+        del global_before_reset
+
+        w_glob = Aggregation(w_locals, lens)
+        net_glob.load_state_dict(w_glob)
+
+        refreshed = False
+        if (iter + 1) % args.rg_interval == 0:
+            scores = guidance.finalize_window()
+            remapped_scores = remap_repeatability_scores(
+                scores, mode, previous_scores
+            )
+            sampling_weights = sampling_weights_from_scores(
+                remapped_scores, args.rg_mix
+            )
+            for layer_name, score in scores.items():
+                probability = sampling_weights[layer_name]
+                entropy = float(
+                    -(probability * probability.clamp_min(1e-300).log()).sum()
+                )
+                uniform_probability = 1.0 / probability.numel()
+                uniform_entropy = math.log(probability.numel())
+                print(
+                    f"RG_SCORE round={iter + 1} layer={layer_name} "
+                    f"mean_q={float(score.double().mean()):.6f} "
+                    f"max_q={float(score.max()):.6f} "
+                    f"fraction_q_positive={float((score > 0).double().mean()):.6f} "
+                    f"sampling_entropy={entropy:.6f} "
+                    f"uniform_entropy={uniform_entropy:.6f} "
+                    f"entropy_gap={uniform_entropy - entropy:.6f} "
+                    f"max_probability_over_uniform="
+                    f"{float(probability.max() / uniform_probability):.6f} "
+                    f"min_probability_over_uniform="
+                    f"{float(probability.min() / uniform_probability):.6f}",
+                    flush=True,
+                )
+                mapped = remapped_scores[layer_name]
+                if mode == "excess":
+                    print(
+                        f"RG_REMAP_SCORE round={iter + 1} layer={layer_name} "
+                        f"mode=excess mean_q={float(score.double().mean()):.6f} "
+                        f"mean_excess_score={float(mapped.mean()):.6f} "
+                        f"fraction_excess_positive="
+                        f"{float((mapped > 0).double().mean()):.6f} "
+                        f"sampling_entropy={entropy:.6f}",
+                        flush=True,
+                    )
+                else:
+                    previous_mean = (
+                        "none" if previous_scores is None
+                        else f"{float(previous_scores[layer_name].double().mean()):.6f}"
+                    )
+                    print(
+                        f"RG_REMAP_SCORE round={iter + 1} layer={layer_name} "
+                        f"mode=persistent "
+                        f"mean_q_current={float(score.double().mean()):.6f} "
+                        f"mean_q_previous={previous_mean} "
+                        f"mean_persistent_score={float(mapped.mean()):.6f} "
+                        f"sampling_entropy={entropy:.6f}",
+                        flush=True,
+                    )
+            if mode == "persistent":
+                previous_scores = {
+                    name: score.clone() for name, score in scores.items()
+                }
             guidance.reset_window()
             refreshed = True
 
@@ -1191,6 +1352,16 @@ if __name__ == '__main__':
             dataset_validation,
             dataset_final_test,
             dict_users,
+        )
+    elif args.algorithm == 'FedPhoenixRG-Excess':
+        FedPhoenixRGRemapped(
+            net_glob, dataset_train, dataset_validation,
+            dataset_final_test, dict_users, "excess",
+        )
+    elif args.algorithm == 'FedPhoenixRG-Persistent':
+        FedPhoenixRGRemapped(
+            net_glob, dataset_train, dataset_validation,
+            dataset_final_test, dict_users, "persistent",
         )
     elif args.algorithm == 'FedPhoenixRG-LC':
         FedPhoenixRGLC(

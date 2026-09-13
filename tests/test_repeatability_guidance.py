@@ -7,6 +7,7 @@ import torch.nn as nn
 from Algorithm.repeatability_guidance import (
     RepeatabilityGuidance,
     layer_calibrated_sampling_weights,
+    remap_repeatability_scores,
     sampling_weights_from_scores,
 )
 
@@ -164,4 +165,46 @@ def test_layer_calibration_uniform_fallback_and_eligible_diagnostics():
     assert calibration["gamma"]["0"] == 0.0
     assert torch.equal(
         probability["0"], torch.full((3,), 1 / 3, dtype=torch.float64)
+    )
+
+
+def test_excess_remap_uses_only_above_layer_mean_scores():
+    scores = {"layer": torch.tensor([0.0, 0.2, 0.6, 0.8])}
+    excess = remap_repeatability_scores(scores, "excess")
+    expected_score = torch.tensor([0.0, 0.0, 0.2, 0.4], dtype=torch.float64)
+    assert torch.allclose(excess["layer"], expected_score, atol=1e-7)
+    probability = sampling_weights_from_scores(excess, 0.75)["layer"]
+    expected_probability = 0.25 * torch.full((4,), 0.25, dtype=torch.float64)
+    expected_probability += 0.75 * expected_score / expected_score.sum()
+    assert torch.allclose(probability, expected_probability, atol=1e-7)
+    flat = remap_repeatability_scores(
+        {"layer": torch.full((4,), 0.3)}, "excess"
+    )
+    uniform = sampling_weights_from_scores(flat, 0.75)["layer"]
+    assert torch.equal(uniform, torch.full((4,), 0.25, dtype=torch.float64))
+
+
+def test_persistent_remap_uses_two_consecutive_windows():
+    current = {"layer": torch.tensor([0.0, 0.25, 1.0, 0.5])}
+    previous = {"layer": torch.tensor([1.0, 1.0, 0.25, 0.0])}
+    first = remap_repeatability_scores(current, "persistent")
+    assert torch.equal(
+        sampling_weights_from_scores(first, 0.75)["layer"],
+        sampling_weights_from_scores(current, 0.75)["layer"],
+    )
+    persistent = remap_repeatability_scores(current, "persistent", previous)
+    assert torch.allclose(
+        persistent["layer"], torch.tensor([0.0, 0.5, 0.5, 0.0], dtype=torch.float64)
+    )
+    probability = sampling_weights_from_scores(persistent, 0.75)["layer"]
+    assert torch.allclose(
+        probability, torch.tensor([0.0625, 0.4375, 0.4375, 0.0625], dtype=torch.float64)
+    )
+    disjoint = remap_repeatability_scores(
+        {"layer": torch.tensor([1.0, 0.0])}, "persistent",
+        {"layer": torch.tensor([0.0, 1.0])},
+    )
+    assert torch.equal(
+        sampling_weights_from_scores(disjoint, 0.75)["layer"],
+        torch.full((2,), 0.5, dtype=torch.float64),
     )

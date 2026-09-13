@@ -110,9 +110,9 @@ class _FakeLocalUpdate:
         return net.state_dict()
 
 
-def _run(method, initial_state, monkeypatch):
+def _run(method, initial_state, monkeypatch, epochs=20):
     args = SimpleNamespace(
-        epochs=20,
+        epochs=epochs,
         frac=0.5,
         num_users=6,
         seed=31,
@@ -158,6 +158,14 @@ def _run(method, initial_state, monkeypatch):
     np.random.seed(args.seed)
     if method == "FedPhoenix":
         main_fed.FedPhoenix(model, None, None, None, users)
+    elif method == "FedPhoenixRG-Excess":
+        main_fed.FedPhoenixRGRemapped(
+            model, None, None, None, users, "excess"
+        )
+    elif method == "FedPhoenixRG-Persistent":
+        main_fed.FedPhoenixRGRemapped(
+            model, None, None, None, users, "persistent"
+        )
     elif method == "FedPhoenixRG-LC":
         main_fed.FedPhoenixRGLC(model, None, None, None, users)
     else:
@@ -211,3 +219,28 @@ def test_lc_first_twenty_rounds_are_exactly_fedphoenix(monkeypatch):
     ]
     for key, value in baseline_state.items():
         assert torch.equal(value, lc_state[key]), key
+
+
+def test_remapped_methods_preserve_rg_before_first_guidance(monkeypatch):
+    torch.manual_seed(9)
+    initial_state = _TinyNet().state_dict()
+    _rg_state, rg_rows, rg_traces = _run(
+        "FedPhoenixRG", initial_state, monkeypatch, epochs=21
+    )
+    for method in ("FedPhoenixRG-Excess", "FedPhoenixRG-Persistent"):
+        _state, rows, traces = _run(
+            method, initial_state, monkeypatch, epochs=21
+        )
+        assert [row["test_accuracy"] for row in rows[:20]] == [
+            row["test_accuracy"] for row in rg_rows[:20]
+        ]
+        assert [row["selected_clients"] for row in rows] == [
+            row["selected_clients"] for row in rg_rows
+        ]
+        assert [row["task_seeds"] for row in rows] == [
+            row["task_seeds"] for row in rg_rows
+        ]
+        assert traces[:20] == rg_traces[:20]
+        if method == "FedPhoenixRG-Persistent":
+            assert traces[20] == rg_traces[20]
+            assert rows[20]["test_accuracy"] == rg_rows[20]["test_accuracy"]
