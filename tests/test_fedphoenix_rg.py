@@ -158,6 +158,10 @@ def _run(method, initial_state, monkeypatch, epochs=20):
     np.random.seed(args.seed)
     if method == "FedPhoenix":
         main_fed.FedPhoenix(model, None, None, None, users)
+    elif method == "FedPhoenixRG-AA":
+        main_fed.FedPhoenixRGAA(model, None, None, None, users)
+    elif method == "FedPhoenixRG-Recovery":
+        main_fed.FedPhoenixRGRecovery(model, None, None, None, users)
     elif method == "FedPhoenixRG-Excess":
         main_fed.FedPhoenixRGRemapped(
             model, None, None, None, users, "excess"
@@ -244,3 +248,25 @@ def test_remapped_methods_preserve_rg_before_first_guidance(monkeypatch):
         if method == "FedPhoenixRG-Persistent":
             assert traces[20] == rg_traces[20]
             assert rows[20]["test_accuracy"] == rg_rows[20]["test_accuracy"]
+
+
+def test_aa_and_recovery_preserve_rg_for_first_twenty_rounds(monkeypatch):
+    torch.manual_seed(9)
+    initial_state = _TinyNet().state_dict()
+    rg_state, rg_rows, rg_traces = _run(
+        "FedPhoenixRG", initial_state, monkeypatch
+    )
+    for method in ("FedPhoenixRG-AA", "FedPhoenixRG-Recovery"):
+        state, rows, traces = _run(method, initial_state, monkeypatch)
+        assert [row["selected_clients"] for row in rows] == [
+            row["selected_clients"] for row in rg_rows
+        ]
+        assert [row["task_seeds"] for row in rows] == [
+            row["task_seeds"] for row in rg_rows
+        ]
+        assert traces == rg_traces
+        assert [row["test_accuracy"] for row in rows] == [
+            row["test_accuracy"] for row in rg_rows
+        ]
+        for key, value in rg_state.items():
+            assert torch.equal(value, state[key]), key

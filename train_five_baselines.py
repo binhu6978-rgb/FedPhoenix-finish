@@ -40,6 +40,8 @@ ALIASES = {
     "FedPhoenixRG-LC": "FedPhoenixRG-LC",
     "FedPhoenixRG-Excess": "FedPhoenixRG-Excess",
     "FedPhoenixRG-Persistent": "FedPhoenixRG-Persistent",
+    "FedPhoenixRG-AA": "FedPhoenixRG-AA",
+    "FedPhoenixRG-Recovery": "FedPhoenixRG-Recovery",
 }
 PARTITION_FILE = os.path.join("data", "cifar10_100_noniidCase5_beta0.3.json")
 
@@ -155,6 +157,7 @@ def method_specific_flags(method, args):
     if method in {
         "FedPhoenixRG", "FedPhoenixRG-LC",
         "FedPhoenixRG-Excess", "FedPhoenixRG-Persistent",
+        "FedPhoenixRG-AA", "FedPhoenixRG-Recovery",
     }:
         return [
             "--rg_interval", str(args.rg_interval),

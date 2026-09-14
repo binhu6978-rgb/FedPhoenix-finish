@@ -177,6 +177,199 @@ class RepeatabilityGuidance:
         """Return eligible-client summaries from the last finalized window."""
         return {name: dict(values) for name, values in self._diagnostics.items()}
 
+    @torch.no_grad()
+    def finalize_window_sample_weighted(self, client_sample_counts):
+        """Finalize q with sample-weighted eligible-client aggregation only."""
+        scores = {}
+        diagnostics = {}
+        for layer_name, _state_key, output_filters in self.layers:
+            repeat_sum = torch.zeros(output_filters, dtype=torch.float64)
+            energy_sum = torch.zeros(output_filters, dtype=torch.float64)
+            sample_weight_sum = torch.zeros(output_filters, dtype=torch.float64)
+            eligible_clients = torch.zeros(output_filters, dtype=torch.long)
+            eligible_sample_sum = 0.0
+            eligible_pair_count = 0
+            eligible_sample_values = []
+            for client_id, client_stats in self._stats.items():
+                stats = client_stats.get(layer_name)
+                if stats is None:
+                    continue
+                if int(client_id) not in client_sample_counts:
+                    raise ValueError(f"missing sample count for client {client_id}")
+                sample_count = float(client_sample_counts[int(client_id)])
+                if not math.isfinite(sample_count) or sample_count <= 0.0:
+                    raise ValueError("client sample counts must be finite and positive")
+                count = stats["count"]
+                eligible = count >= 2
+                if not bool(eligible.any()):
+                    continue
+                n = count[eligible].double()
+                pair_count = n * (n - 1.0) / 2.0
+                repeat_sum[eligible] += (
+                    sample_count * stats["pair_dot"][eligible] / pair_count
+                )
+                energy_sum[eligible] += (
+                    sample_count * stats["energy_sum"][eligible] / n
+                )
+                sample_weight_sum[eligible] += sample_count
+                eligible_clients[eligible] += 1
+                eligible_filters = int(eligible.sum())
+                eligible_sample_sum += sample_count * eligible_filters
+                eligible_pair_count += eligible_filters
+                eligible_sample_values.append(sample_count)
+
+            present = sample_weight_sum > 0
+            repeatability = torch.zeros(output_filters, dtype=torch.float64)
+            energy = torch.zeros(output_filters, dtype=torch.float64)
+            repeatability[present] = (
+                repeat_sum[present] / sample_weight_sum[present]
+            )
+            energy[present] = energy_sum[present] / sample_weight_sum[present]
+            score = torch.zeros(output_filters, dtype=torch.float32)
+            score[present] = (
+                repeatability[present].clamp_min(0.0)
+                / (energy[present] + self.epsilon)
+            ).clamp_(0.0, 1.0).float()
+            scores[layer_name] = score
+            diagnostics[layer_name] = {
+                "mean_eligible_client_sample_count": (
+                    eligible_sample_sum / eligible_pair_count
+                    if eligible_pair_count else 0.0
+                ),
+                "min_eligible_client_sample_count": (
+                    min(eligible_sample_values) if eligible_sample_values else 0.0
+                ),
+                "max_eligible_client_sample_count": (
+                    max(eligible_sample_values) if eligible_sample_values else 0.0
+                ),
+                "mean_total_eligible_sample_weight": (
+                    float(sample_weight_sum[present].mean())
+                    if bool(present.any()) else 0.0
+                ),
+                "mean_eligible_clients": float(eligible_clients.double().mean()),
+                "min_eligible_clients": int(eligible_clients.min()),
+            }
+        return (
+            {name: score.clone() for name, score in scores.items()},
+            diagnostics,
+        )
+
+
+class ResetRecoverabilityGuidance:
+    """Client-balanced reset recovery observations over one finite window."""
+
+    def __init__(self, model: nn.Module, epsilon: float = 1e-12):
+        if epsilon <= 0:
+            raise ValueError("epsilon must be positive")
+        self.layers = convolution_layers(model)
+        if not self.layers:
+            raise ValueError("the model has no convolutional layers")
+        self.epsilon = float(epsilon)
+        self.reset_window()
+
+    def reset_window(self):
+        self._stats = defaultdict(dict)
+        self.rounds_observed = 0
+
+    def _client_layer_stats(self, client_id, layer_name, output_filters):
+        client_stats = self._stats[int(client_id)]
+        if layer_name not in client_stats:
+            client_stats[layer_name] = {
+                "rho_sum": torch.zeros(output_filters, dtype=torch.float64),
+                "count": torch.zeros(output_filters, dtype=torch.long),
+            }
+        return client_stats[layer_name]
+
+    @torch.no_grad()
+    def observe_round(self, task_models, local_states, client_ids, reset_traces):
+        """Measure recovery using existing reset and post-local states only."""
+        if not (
+            len(task_models) == len(local_states)
+            == len(client_ids) == len(reset_traces)
+        ):
+            raise ValueError(
+                "task_models, local_states, client_ids, and reset_traces must align"
+            )
+        if not local_states:
+            self.rounds_observed += 1
+            return
+        reset_states = [model.state_dict() for model in task_models]
+        for layer_name, state_key, output_filters in self.layers:
+            post_local = torch.stack([
+                state[state_key].detach().to(device="cpu", dtype=torch.float32)
+                for state in local_states
+            ])
+            non_reset = RepeatabilityGuidance._reset_masks(
+                reset_traces, layer_name, output_filters
+            )
+            reset = ~non_reset
+            non_reset_count = non_reset.sum(dim=0)
+            usable = non_reset_count >= 2
+            observed = reset & usable.unsqueeze(0)
+            if not bool(observed.any()):
+                continue
+            expand = (1,) * (post_local.ndim - 2)
+            mask = non_reset.reshape(non_reset.shape + expand).to(post_local.dtype)
+            denominator = non_reset_count.clamp_min(1).reshape(
+                (output_filters,) + expand
+            )
+            consensus = (post_local * mask).sum(dim=0) / denominator
+            for task_id, client_id in enumerate(client_ids):
+                accepted = observed[task_id]
+                if not bool(accepted.any()):
+                    continue
+                reset_state = reset_states[task_id][state_key].detach().to(
+                    device="cpu", dtype=torch.float32
+                )
+                before = (
+                    reset_state[accepted].double()
+                    - consensus[accepted].double()
+                ).flatten(1).square().sum(dim=1)
+                after = (
+                    post_local[task_id, accepted].double()
+                    - consensus[accepted].double()
+                ).flatten(1).square().sum(dim=1)
+                rho = (1.0 - after / (before + self.epsilon)).clamp_(0.0, 1.0)
+                stats = self._client_layer_stats(
+                    client_id, layer_name, output_filters
+                )
+                stats["rho_sum"][accepted] += rho
+                stats["count"][accepted] += 1
+        self.rounds_observed += 1
+
+    @torch.no_grad()
+    def finalize_window(self):
+        """Average recovery per client/filter, then equally across clients."""
+        recovery = {}
+        diagnostics = {}
+        for layer_name, _state_key, output_filters in self.layers:
+            client_mean_sum = torch.zeros(output_filters, dtype=torch.float64)
+            eligible_clients = torch.zeros(output_filters, dtype=torch.long)
+            observation_counts = torch.zeros(output_filters, dtype=torch.long)
+            for client_stats in self._stats.values():
+                stats = client_stats.get(layer_name)
+                if stats is None:
+                    continue
+                present = stats["count"] > 0
+                if not bool(present.any()):
+                    continue
+                client_mean_sum[present] += (
+                    stats["rho_sum"][present] / stats["count"][present].double()
+                )
+                eligible_clients[present] += 1
+                observation_counts += stats["count"]
+            present = eligible_clients > 0
+            rho = torch.ones(output_filters, dtype=torch.float64)
+            rho[present] = (
+                client_mean_sum[present] / eligible_clients[present].double()
+            )
+            recovery[layer_name] = rho
+            diagnostics[layer_name] = {
+                "observation_counts": observation_counts.clone(),
+                "eligible_clients": eligible_clients.clone(),
+            }
+        return recovery, diagnostics
+
 
 def sampling_weights_from_scores(scores, mix, epsilon=1e-12):
     """Mix uniform reset placement with normalized repeatability scores.
@@ -201,6 +394,51 @@ def sampling_weights_from_scores(scores, mix, epsilon=1e-12):
             probability = (1.0 - mix) * uniform + mix * (score / total)
         weights[name] = probability
     return weights
+
+
+def score_correlation(first, second, epsilon=1e-12):
+    """Deterministic Pearson correlation for diagnostic tensors."""
+    first = torch.as_tensor(first, dtype=torch.float64).flatten()
+    second = torch.as_tensor(second, dtype=torch.float64).flatten()
+    if first.shape != second.shape or first.numel() == 0:
+        raise ValueError("diagnostic tensors must be non-empty and aligned")
+    first = first - first.mean()
+    second = second - second.mean()
+    denominator = first.square().sum().sqrt() * second.square().sum().sqrt()
+    if not torch.isfinite(denominator) or float(denominator) <= float(epsilon):
+        return 0.0
+    return float((first * second).sum() / denominator)
+
+
+def recovery_weighted_sampling_weights(
+    scores, recovery, mix=0.75, epsilon=1e-12
+):
+    """Map q*rho to probabilities, falling back to q and then uniform."""
+    utility = {}
+    weights = {}
+    fallback = {}
+    for name, raw_score in scores.items():
+        if name not in recovery:
+            raise ValueError(f"recovery scores missing layer {name}")
+        score = torch.as_tensor(raw_score, dtype=torch.float64).clamp_min(0.0)
+        rho = torch.as_tensor(recovery[name], dtype=torch.float64).clamp(0.0, 1.0)
+        if score.shape != rho.shape or score.numel() == 0:
+            raise ValueError("repeatability and recovery scores must be aligned")
+        layer_utility = score * rho
+        utility[name] = layer_utility
+        if torch.isfinite(layer_utility.sum()) and float(layer_utility.sum()) > epsilon:
+            source = layer_utility
+            fallback[name] = "recovery"
+        elif torch.isfinite(score.sum()) and float(score.sum()) > epsilon:
+            source = score
+            fallback[name] = "q"
+        else:
+            source = torch.zeros_like(score)
+            fallback[name] = "uniform"
+        weights[name] = sampling_weights_from_scores(
+            {name: source}, mix, epsilon
+        )[name]
+    return weights, utility, fallback
 
 
 def remap_repeatability_scores(scores, mode, previous_scores=None):

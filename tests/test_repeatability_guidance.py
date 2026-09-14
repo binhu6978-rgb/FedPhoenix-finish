@@ -6,8 +6,10 @@ import torch.nn as nn
 
 from Algorithm.repeatability_guidance import (
     RepeatabilityGuidance,
+    ResetRecoverabilityGuidance,
     layer_calibrated_sampling_weights,
     remap_repeatability_scores,
+    recovery_weighted_sampling_weights,
     sampling_weights_from_scores,
 )
 
@@ -208,3 +210,73 @@ def test_persistent_remap_uses_two_consecutive_windows():
         sampling_weights_from_scores(disjoint, 0.75)["layer"],
         torch.full((2,), 0.5, dtype=torch.float64),
     )
+
+
+def test_sample_weighted_finalize_changes_only_client_aggregation():
+    guidance = RepeatabilityGuidance(_model(filters=2))
+    guidance._stats[0]["0"] = {
+        "sum_r": torch.zeros((2, 1, 1, 1)),
+        "count": torch.tensor([2, 2]),
+        "pair_dot": torch.tensor([1.0, 3.0], dtype=torch.float64),
+        "energy_sum": torch.tensor([4.0, 8.0], dtype=torch.float64),
+    }
+    guidance._stats[1]["0"] = {
+        "sum_r": torch.zeros((2, 1, 1, 1)),
+        "count": torch.tensor([2, 2]),
+        "pair_dot": torch.tensor([3.0, 1.0], dtype=torch.float64),
+        "energy_sum": torch.tensor([8.0, 4.0], dtype=torch.float64),
+    }
+
+    equal = guidance.finalize_window()["0"]
+    weighted, diagnostics = guidance.finalize_window_sample_weighted(
+        {0: 10, 1: 30}
+    )
+    assert torch.allclose(equal, torch.full((2,), 2 / 3), atol=1e-7)
+    assert torch.allclose(
+        weighted["0"], torch.tensor([5 / 7, 0.6]), atol=1e-7
+    )
+    assert diagnostics["0"]["mean_eligible_client_sample_count"] == 20.0
+    assert diagnostics["0"]["min_eligible_client_sample_count"] == 10.0
+    assert diagnostics["0"]["max_eligible_client_sample_count"] == 30.0
+    assert diagnostics["0"]["mean_total_eligible_sample_weight"] == 40.0
+
+
+def test_reset_recoverability_uses_non_reset_post_local_consensus():
+    model = _model(filters=2)
+    task_models = [_model(filters=2) for _ in range(3)]
+    reset_states = [[0.0, 1.0], [4.0, 1.0], [6.0, 1.0]]
+    for task_model, values in zip(task_models, reset_states):
+        task_model.load_state_dict(_state(task_model, values))
+    local_states = [
+        _state(model, [8.0, 1.0]),
+        _state(model, [10.0, 1.0]),
+        _state(model, [10.0, 1.0]),
+    ]
+    recovery = ResetRecoverabilityGuidance(model)
+    recovery.observe_round(
+        task_models, local_states, [0, 1, 2], [_trace(0), _trace(), _trace()]
+    )
+    rho, diagnostics = recovery.finalize_window()
+
+    assert torch.allclose(rho["0"], torch.tensor([0.96, 1.0], dtype=torch.float64))
+    assert torch.equal(
+        diagnostics["0"]["observation_counts"], torch.tensor([1, 0])
+    )
+
+
+def test_recovery_mapping_falls_back_to_q_then_uniform():
+    weights, utility, fallback = recovery_weighted_sampling_weights(
+        {"layer": torch.tensor([1.0, 0.0])},
+        {"layer": torch.tensor([0.0, 1.0])},
+        mix=0.75,
+    )
+    assert torch.equal(utility["layer"], torch.zeros(2, dtype=torch.float64))
+    assert fallback["layer"] == "q"
+    assert torch.allclose(
+        weights["layer"], torch.tensor([0.875, 0.125], dtype=torch.float64)
+    )
+    uniform, _utility, fallback = recovery_weighted_sampling_weights(
+        {"layer": torch.zeros(2)}, {"layer": torch.ones(2)}, mix=0.75
+    )
+    assert fallback["layer"] == "uniform"
+    assert torch.equal(uniform["layer"], torch.full((2,), 0.5, dtype=torch.float64))
