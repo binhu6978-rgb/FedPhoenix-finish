@@ -11,6 +11,7 @@ from Algorithm.repeatability_guidance import RepeatabilityGuidance
 
 
 _ORIGINAL_BUILD_TASKS = main_fed._build_fedphoenix_tasks
+_ORIGINAL_BUILD_PERMUTED_TASKS = main_fed.build_permuted_fedphoenix_tasks
 
 
 def _two_layer_model():
@@ -138,8 +139,21 @@ def _run(method, initial_state, monkeypatch, epochs=20):
         ])
         return models, traces
 
+    def record_permuted_tasks(*task_args, **task_kwargs):
+        models, traces = _ORIGINAL_BUILD_PERMUTED_TASKS(
+            *task_args, **task_kwargs
+        )
+        reset_traces.append([
+            [tuple(layer["reset_indices"]) for layer in trace["layers"]]
+            for trace in traces
+        ])
+        return models, traces
+
     monkeypatch.setattr(main_fed, "args", args, raising=False)
     monkeypatch.setattr(main_fed, "_build_fedphoenix_tasks", record_tasks)
+    monkeypatch.setattr(
+        main_fed, "build_permuted_fedphoenix_tasks", record_permuted_tasks
+    )
     monkeypatch.setattr(main_fed, "LocalUpdate_FedAvg", _FakeLocalUpdate)
     monkeypatch.setattr(
         main_fed,
@@ -158,6 +172,10 @@ def _run(method, initial_state, monkeypatch, epochs=20):
     np.random.seed(args.seed)
     if method == "FedPhoenix":
         main_fed.FedPhoenix(model, None, None, None, users)
+    elif method == "FedPhoenixRG-DeltaAgg":
+        main_fed.FedPhoenixRGDeltaAgg(model, None, None, None, users)
+    elif method == "FedPhoenixRG-Permute":
+        main_fed.FedPhoenixRGPermute(model, None, None, None, users)
     elif method == "FedPhoenixRG-AA":
         main_fed.FedPhoenixRGAA(model, None, None, None, users)
     elif method == "FedPhoenixRG-Recovery":
@@ -270,3 +288,22 @@ def test_aa_and_recovery_preserve_rg_for_first_twenty_rounds(monkeypatch):
         ]
         for key, value in rg_state.items():
             assert torch.equal(value, state[key]), key
+
+
+def test_new_mechanisms_preserve_clients_seeds_and_filter_selection(monkeypatch):
+    torch.manual_seed(9)
+    initial_state = _TinyNet().state_dict()
+    _rg_state, rg_rows, rg_traces = _run(
+        "FedPhoenixRG", initial_state, monkeypatch, epochs=2
+    )
+    for method in ("FedPhoenixRG-DeltaAgg", "FedPhoenixRG-Permute"):
+        _state, rows, traces = _run(
+            method, initial_state, monkeypatch, epochs=2
+        )
+        assert [row["selected_clients"] for row in rows] == [
+            row["selected_clients"] for row in rg_rows
+        ]
+        assert [row["task_seeds"] for row in rows] == [
+            row["task_seeds"] for row in rg_rows
+        ]
+        assert traces == rg_traces

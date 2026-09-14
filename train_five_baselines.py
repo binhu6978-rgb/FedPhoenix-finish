@@ -42,6 +42,8 @@ ALIASES = {
     "FedPhoenixRG-Persistent": "FedPhoenixRG-Persistent",
     "FedPhoenixRG-AA": "FedPhoenixRG-AA",
     "FedPhoenixRG-Recovery": "FedPhoenixRG-Recovery",
+    "FedPhoenixRG-DeltaAgg": "FedPhoenixRG-DeltaAgg",
+    "FedPhoenixRG-Permute": "FedPhoenixRG-Permute",
 }
 PARTITION_FILE = os.path.join("data", "cifar10_100_noniidCase5_beta0.3.json")
 
@@ -158,6 +160,7 @@ def method_specific_flags(method, args):
         "FedPhoenixRG", "FedPhoenixRG-LC",
         "FedPhoenixRG-Excess", "FedPhoenixRG-Persistent",
         "FedPhoenixRG-AA", "FedPhoenixRG-Recovery",
+        "FedPhoenixRG-DeltaAgg", "FedPhoenixRG-Permute",
     }:
         return [
             "--rg_interval", str(args.rg_interval),
