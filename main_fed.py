@@ -38,6 +38,13 @@ from Algorithm.intervention_variants import (
     build_permuted_fedphoenix_tasks,
     summarize_permutation_traces,
 )
+from Algorithm.timing_coverage_variants import (
+    OneWindowExtensionController,
+    build_coordinated_fedphoenix_tasks,
+    build_rge_fedphoenix_tasks,
+    coverage_diagnostics,
+    independent_counterfactual_traces,
+)
 from Algorithm.repeatability_guidance import (
     RepeatabilityGuidance,
     ResetRecoverabilityGuidance,
@@ -153,6 +160,67 @@ def _write_training_metrics(args, rows):
         json.dump(vars(args), handle, ensure_ascii=False, indent=2, default=str)
     print(f"Unified training metrics saved to {csv_path}")
     return csv_path
+
+
+def _mechanism_diagnostic_path(args, suffix):
+    os.makedirs(args.metrics_log_dir, exist_ok=True)
+    return os.path.abspath(
+        os.path.join(args.metrics_log_dir, f"{_metrics_stem(args)}_{suffix}.jsonl")
+    )
+
+
+def _append_jsonl(path, rows):
+    if isinstance(rows, dict):
+        rows = [rows]
+    if not rows:
+        return
+    with open(path, "a", encoding="utf-8") as handle:
+        for row in rows:
+            handle.write(json.dumps(row, ensure_ascii=False, default=str) + "\n")
+
+
+def _rg_score_diagnostics(round_number, scores, sampling_weights):
+    rows = []
+    for layer_name, score in scores.items():
+        weights = sampling_weights[layer_name]
+        probability = weights / weights.sum()
+        entropy = float(
+            -(probability * probability.clamp_min(1e-300).log()).sum()
+        )
+        uniform_probability = 1.0 / probability.numel()
+        uniform_entropy = math.log(probability.numel())
+        row = {
+            "event": "rg_refresh",
+            "round": int(round_number),
+            "layer_name": layer_name,
+            "mean_q": float(score.double().mean()),
+            "max_q": float(score.max()),
+            "fraction_q_positive": float((score > 0).double().mean()),
+            "sampling_entropy": entropy,
+            "uniform_entropy": uniform_entropy,
+            "entropy_gap": uniform_entropy - entropy,
+            "max_probability_over_uniform": float(
+                probability.max() / uniform_probability
+            ),
+            "min_probability_over_uniform": float(
+                probability.min() / uniform_probability
+            ),
+        }
+        rows.append(row)
+        print(
+            f"RG_SCORE round={round_number} layer={layer_name} "
+            f"mean_q={row['mean_q']:.6f} max_q={row['max_q']:.6f} "
+            f"fraction_q_positive={row['fraction_q_positive']:.6f} "
+            f"sampling_entropy={entropy:.6f} "
+            f"uniform_entropy={uniform_entropy:.6f} "
+            f"entropy_gap={uniform_entropy - entropy:.6f} "
+            f"max_probability_over_uniform="
+            f"{row['max_probability_over_uniform']:.6f} "
+            f"min_probability_over_uniform="
+            f"{row['min_probability_over_uniform']:.6f}",
+            flush=True,
+        )
+    return rows
 
 
 def _split_evaluation_dataset(dataset_test, args):
@@ -494,6 +562,307 @@ def FedPhoenixRG(
 
     print_peak_accuracy(acc, args.algorithm)
     _write_training_metrics(args, metrics_rows)
+
+
+def FedPhoenixRGRGE(
+    net_glob,
+    dataset_train,
+    dataset_validation,
+    dataset_test,
+    dict_users,
+):
+    """FedPhoenixRG with a fixed one-window repeatability-gated extension."""
+    if args.rg_interval < 2:
+        raise ValueError("rg_interval must be at least 2")
+    if not 0.0 <= args.rg_mix <= 1.0:
+        raise ValueError("rg_mix must be in [0, 1]")
+
+    net_glob.train()
+    acc = []
+    metrics_rows = []
+    args.density_local = 0.01
+    guidance = RepeatabilityGuidance(net_glob)
+    controller = OneWindowExtensionController(
+        guidance.layers,
+        args.FP_conv,
+        args.rg_interval,
+        threshold=0.5,
+    )
+    sampling_weights = None
+    latest_scores = None
+    diagnostic_path = _mechanism_diagnostic_path(args, "rge_diagnostics")
+    open(diagnostic_path, "w", encoding="utf-8").close()
+
+    for iter in range(args.epochs):
+        round_start = time.perf_counter()
+        if args.density_local > 1 or args.density_local < 0:
+            args.density_local = 0
+
+        print('*' * 80)
+        print('Round {:3d}'.format(iter))
+        forced_layers, new_decisions = controller.forced_active_layers(iter)
+        for decision in new_decisions:
+            decision["round"] = int(iter + 1)
+            _append_jsonl(diagnostic_path, decision)
+            print(
+                f"RGE_GATE round={iter + 1} layer={decision['layer_name']} "
+                f"retention={decision['retention_ratio']:.6f} "
+                f"triggered={int(decision['gate_triggered'])} "
+                f"extended_rounds={decision['extended_rounds']}",
+                flush=True,
+            )
+
+        w_locals = []
+        lens = []
+        m = max(int(args.frac * args.num_users), 1)
+        idxs_users = np.random.choice(range(args.num_users), m, replace=False)
+        global_before_reset = {
+            key: value.detach().to(device="cpu", dtype=torch.float32).clone()
+            for key, value in net_glob.state_dict().items()
+            if key.endswith(".weight") and value.ndim == 4
+        }
+        task_models, task_traces = build_rge_fedphoenix_tasks(
+            net_glob,
+            iter,
+            m,
+            args,
+            sampling_weights,
+            forced_layers,
+        )
+        assignments = []
+        for task_id, idx in enumerate(idxs_users):
+            net_local = copy.deepcopy(task_models[task_id]).to(args.device)
+            local = LocalUpdate_FedAvg(
+                args=args,
+                dataset=dataset_train,
+                idxs=dict_users[idx],
+                dataset_test=dataset_test,
+            )
+            w = local.train(net=net_local)
+            w_locals.append(copy.deepcopy(w))
+            lens.append(len(dict_users[idx]))
+            assignments.append({"client_id": int(idx), "task_id": int(task_id)})
+
+        guidance.observe_round(
+            global_before_reset, w_locals, idxs_users.tolist(), task_traces
+        )
+        del global_before_reset
+        w_glob = Aggregation(w_locals, lens)
+        net_glob.load_state_dict(w_glob)
+
+        refreshed = False
+        if (iter + 1) % args.rg_interval == 0:
+            latest_scores = guidance.finalize_window()
+            sampling_weights = sampling_weights_from_scores(
+                latest_scores, args.rg_mix
+            )
+            refresh_rows = _rg_score_diagnostics(
+                iter + 1, latest_scores, sampling_weights
+            )
+            controller.record_refresh(
+                iter + 1, latest_scores, sampling_weights
+            )
+            for row in refresh_rows:
+                row["variant"] = "FedPhoenixRG-RGE"
+            _append_jsonl(diagnostic_path, refresh_rows)
+            guidance.reset_window()
+            refreshed = True
+
+        round_train_seconds = time.perf_counter() - round_start
+        item_acc = evaluate_round_accuracy(
+            net_glob, dataset_test, args, iter + 1
+        )
+        acc.append(item_acc)
+        extension_rows = []
+        for layer_name in sorted(forced_layers):
+            probability = torch.as_tensor(
+                sampling_weights[layer_name], dtype=torch.float64
+            )
+            extension_rows.append(
+                {
+                    "event": "rge_extended_round",
+                    "round": int(iter + 1),
+                    "layer_name": layer_name,
+                    "mean_q": (
+                        float(latest_scores[layer_name].double().mean())
+                        if latest_scores is not None else None
+                    ),
+                    "sampling_entropy": float(
+                        -(probability * probability.clamp_min(1e-300).log()).sum()
+                    ),
+                    "test_accuracy": float(item_acc),
+                }
+            )
+        _append_jsonl(diagnostic_path, extension_rows)
+        metrics_rows.append(
+            {
+                "round": int(iter + 1),
+                "algorithm": args.algorithm,
+                "seed": int(args.seed),
+                "test_accuracy": item_acc,
+                "round_train_seconds": float(round_train_seconds),
+                "matching_seconds": 0.0,
+                "selected_clients": json.dumps(
+                    [int(item) for item in idxs_users.tolist()]
+                ),
+                "assignments": json.dumps(assignments),
+                "task_seeds": json.dumps(
+                    [int(trace["seed"]) for trace in task_traces]
+                ),
+                "guidance_active": int(sampling_weights is not None),
+                "guidance_refreshed": int(refreshed),
+                "rge_extended_layers": json.dumps(sorted(forced_layers)),
+            }
+        )
+        del task_models
+        if args.device.type == "cuda":
+            torch.cuda.empty_cache()
+
+    _unused, final_decisions = controller.forced_active_layers(args.epochs)
+    for decision in final_decisions:
+        decision["round"] = int(args.epochs + 1)
+        decision["outside_training_budget"] = True
+        _append_jsonl(diagnostic_path, decision)
+    print_peak_accuracy(acc, args.algorithm)
+    _write_training_metrics(args, metrics_rows)
+    print(f"RGE diagnostics saved to {diagnostic_path}")
+
+
+def FedPhoenixRGRCC(
+    net_glob,
+    dataset_train,
+    dataset_validation,
+    dataset_test,
+    dict_users,
+):
+    """FedPhoenixRG with weighted round-level coordinated reset coverage."""
+    if args.rg_interval < 2:
+        raise ValueError("rg_interval must be at least 2")
+    if not 0.0 <= args.rg_mix <= 1.0:
+        raise ValueError("rg_mix must be in [0, 1]")
+
+    net_glob.train()
+    acc = []
+    metrics_rows = []
+    args.density_local = 0.01
+    guidance = RepeatabilityGuidance(net_glob)
+    sampling_weights = None
+    latest_scores = None
+    diagnostic_path = _mechanism_diagnostic_path(args, "rcc_diagnostics")
+    open(diagnostic_path, "w", encoding="utf-8").close()
+
+    for iter in range(args.epochs):
+        round_start = time.perf_counter()
+        if args.density_local > 1 or args.density_local < 0:
+            args.density_local = 0
+
+        print('*' * 80)
+        print('Round {:3d}'.format(iter))
+        w_locals = []
+        lens = []
+        m = max(int(args.frac * args.num_users), 1)
+        idxs_users = np.random.choice(range(args.num_users), m, replace=False)
+        global_before_reset = {
+            key: value.detach().to(device="cpu", dtype=torch.float32).clone()
+            for key, value in net_glob.state_dict().items()
+            if key.endswith(".weight") and value.ndim == 4
+        }
+        counterfactual_traces = independent_counterfactual_traces(
+            net_glob, iter, m, args, sampling_weights
+        )
+        task_models, task_traces = build_coordinated_fedphoenix_tasks(
+            net_glob, iter, m, args, sampling_weights=sampling_weights
+        )
+        actual_rows = coverage_diagnostics(
+            task_traces, sampling_weights, latest_scores
+        )
+        counterfactual_rows = coverage_diagnostics(
+            counterfactual_traces,
+            sampling_weights,
+            latest_scores,
+            counterfactual=True,
+        )
+        for row in actual_rows + counterfactual_rows:
+            row["round"] = int(iter + 1)
+        _append_jsonl(diagnostic_path, actual_rows + counterfactual_rows)
+
+        assignments = []
+        for task_id, idx in enumerate(idxs_users):
+            net_local = copy.deepcopy(task_models[task_id]).to(args.device)
+            local = LocalUpdate_FedAvg(
+                args=args,
+                dataset=dataset_train,
+                idxs=dict_users[idx],
+                dataset_test=dataset_test,
+            )
+            w = local.train(net=net_local)
+            w_locals.append(copy.deepcopy(w))
+            lens.append(len(dict_users[idx]))
+            assignments.append({"client_id": int(idx), "task_id": int(task_id)})
+
+        guidance.observe_round(
+            global_before_reset, w_locals, idxs_users.tolist(), task_traces
+        )
+        del global_before_reset
+        w_glob = Aggregation(w_locals, lens)
+        net_glob.load_state_dict(w_glob)
+
+        refreshed = False
+        if (iter + 1) % args.rg_interval == 0:
+            latest_scores = guidance.finalize_window()
+            sampling_weights = sampling_weights_from_scores(
+                latest_scores, args.rg_mix
+            )
+            refresh_rows = _rg_score_diagnostics(
+                iter + 1, latest_scores, sampling_weights
+            )
+            for row in refresh_rows:
+                row["variant"] = "FedPhoenixRG-RCC"
+            _append_jsonl(diagnostic_path, refresh_rows)
+            guidance.reset_window()
+            refreshed = True
+
+        round_train_seconds = time.perf_counter() - round_start
+        item_acc = evaluate_round_accuracy(
+            net_glob, dataset_test, args, iter + 1
+        )
+        acc.append(item_acc)
+        actual_total = sum(row["total_reset_slots"] for row in actual_rows)
+        actual_unique = sum(row["unique_reset_filters"] for row in actual_rows)
+        counterfactual_unique = sum(
+            row["unique_reset_filters"] for row in counterfactual_rows
+        )
+        metrics_rows.append(
+            {
+                "round": int(iter + 1),
+                "algorithm": args.algorithm,
+                "seed": int(args.seed),
+                "test_accuracy": item_acc,
+                "round_train_seconds": float(round_train_seconds),
+                "matching_seconds": 0.0,
+                "selected_clients": json.dumps(
+                    [int(item) for item in idxs_users.tolist()]
+                ),
+                "assignments": json.dumps(assignments),
+                "task_seeds": json.dumps(
+                    [int(trace["seed"]) for trace in task_traces]
+                ),
+                "guidance_active": int(sampling_weights is not None),
+                "guidance_refreshed": int(refreshed),
+                "total_reset_slots": int(actual_total),
+                "actual_unique_reset_filters": int(actual_unique),
+                "independent_counterfactual_unique_filters": int(
+                    counterfactual_unique
+                ),
+            }
+        )
+        del task_models
+        if args.device.type == "cuda":
+            torch.cuda.empty_cache()
+
+    print_peak_accuracy(acc, args.algorithm)
+    _write_training_metrics(args, metrics_rows)
+    print(f"RCC diagnostics saved to {diagnostic_path}")
 
 
 def FedPhoenixRGDeltaAgg(
@@ -1982,6 +2351,22 @@ if __name__ == '__main__':
         )
     elif args.algorithm == 'FedPhoenixRG':
         FedPhoenixRG(
+            net_glob,
+            dataset_train,
+            dataset_validation,
+            dataset_final_test,
+            dict_users,
+        )
+    elif args.algorithm == 'FedPhoenixRG-RGE':
+        FedPhoenixRGRGE(
+            net_glob,
+            dataset_train,
+            dataset_validation,
+            dataset_final_test,
+            dict_users,
+        )
+    elif args.algorithm == 'FedPhoenixRG-RCC':
+        FedPhoenixRGRCC(
             net_glob,
             dataset_train,
             dataset_validation,

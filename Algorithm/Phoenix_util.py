@@ -24,6 +24,8 @@ def reset_kernels_for_task(
     current_iter=None,
     conv_transition_period=None,
     sampling_weights=None,
+    forced_active_layers=None,
+    reset_indices_by_layer=None,
 ):
     """Apply a deterministic FedPhoenix-style reset and return its task trace.
 
@@ -64,6 +66,11 @@ def reset_kernels_for_task(
         raise ValueError(
             "current_iter and conv_transition_period must be provided together"
         )
+    forced_active_layers = set(forced_active_layers or ())
+    known_layer_names = {name for name, _layer in conv_layers}
+    if not forced_active_layers.issubset(known_layer_names):
+        unknown = sorted(forced_active_layers - known_layer_names)
+        raise ValueError(f"unknown forced active convolution layers: {unknown}")
     if current_iter is not None:
         total_conv = len(conv_layers)
         conv_layers = [
@@ -71,6 +78,7 @@ def reset_kernels_for_task(
             for depth, (name, layer) in enumerate(conv_layers)
             if current_iter
             < (depth + 1) * (float(conv_transition_period) / total_conv)
+            or name in forced_active_layers
         ]
         if not conv_layers:
             return {
@@ -132,9 +140,24 @@ def reset_kernels_for_task(
             layer_weights = None
             if sampling_weights is not None:
                 layer_weights = sampling_weights.get(name)
-            reset_indices = _sample_kernel_indices(
+            sampled_indices = _sample_kernel_indices(
                 num_kernels, num_reset, layer_weights, python_rng
             )
+            if reset_indices_by_layer is None or name not in reset_indices_by_layer:
+                reset_indices = sampled_indices
+            else:
+                reset_indices = sorted(
+                    int(index) for index in reset_indices_by_layer[name]
+                )
+                if (
+                    len(reset_indices) != num_reset
+                    or len(set(reset_indices)) != len(reset_indices)
+                    or any(index < 0 or index >= num_kernels for index in reset_indices)
+                ):
+                    raise ValueError(
+                        f"invalid preset reset indices for {name}: expected "
+                        f"{num_reset} unique indices in [0, {num_kernels})"
+                    )
 
             mean = layer.weight.data.mean().item()
             std = layer.weight.data.std().item()
