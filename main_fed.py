@@ -223,6 +223,145 @@ def _rg_score_diagnostics(round_number, scores, sampling_weights):
     return rows
 
 
+def _average_ranks(values):
+    """Deterministic average ranks with exact-tie handling."""
+    values = torch.as_tensor(values, dtype=torch.float64).flatten()
+    order = sorted(
+        range(values.numel()), key=lambda index: (float(values[index]), index)
+    )
+    ranks = torch.empty(values.numel(), dtype=torch.float64)
+    start = 0
+    while start < len(order):
+        end = start + 1
+        while end < len(order) and values[order[end]] == values[order[start]]:
+            end += 1
+        average_rank = (start + end - 1) / 2.0
+        for position in range(start, end):
+            ranks[order[position]] = average_rank
+        start = end
+    return ranks
+
+
+def _spearman_correlation(first, second):
+    return score_correlation(_average_ranks(first), _average_ranks(second))
+
+
+def _sampling_distribution_summary(probability):
+    probability = torch.as_tensor(probability, dtype=torch.float64)
+    probability = probability / probability.sum()
+    uniform = 1.0 / probability.numel()
+    uniform_entropy = math.log(probability.numel())
+    entropy = float(
+        -(probability * probability.clamp_min(1e-300).log()).sum()
+    )
+    return {
+        "entropy": entropy,
+        "entropy_gap_from_uniform": uniform_entropy - entropy,
+        "max_probability_over_uniform": float(probability.max() / uniform),
+    }
+
+
+def _jsc_diagnostic_rows(
+    round_number, raw_scores, adjusted_scores, jackknife_diagnostics, args
+):
+    raw_weights = sampling_weights_from_scores(raw_scores, args.rg_mix)
+    adjusted_weights = sampling_weights_from_scores(
+        adjusted_scores, args.rg_mix
+    )
+    rows = []
+    layer_names = list(raw_scores)
+    for depth, (layer_name, raw_value) in enumerate(raw_scores.items()):
+        raw = torch.as_tensor(raw_value, dtype=torch.float64)
+        adjusted = torch.as_tensor(
+            adjusted_scores[layer_name], dtype=torch.float64
+        )
+        se = torch.as_tensor(
+            jackknife_diagnostics[layer_name]["jackknife_se"],
+            dtype=torch.float64,
+        )
+        eligible = torch.as_tensor(
+            jackknife_diagnostics[layer_name]["eligible_clients"],
+            dtype=torch.float64,
+        )
+        raw_distribution = _sampling_distribution_summary(
+            raw_weights[layer_name]
+        )
+        adjusted_distribution = _sampling_distribution_summary(
+            adjusted_weights[layer_name]
+        )
+        reset_count = int(raw.numel() * float(args.reset))
+        stop_iter = (depth + 1) * float(args.FP_conv) / len(layer_names)
+        active_rounds_until_next_refresh = sum(
+            current_iter < stop_iter
+            for current_iter in range(
+                int(round_number),
+                min(
+                    int(args.epochs),
+                    int(round_number) + int(args.rg_interval),
+                ),
+            )
+        )
+        row = {
+            "event": "jsc_refresh",
+            "round": int(round_number),
+            "layer_name": layer_name,
+            "num_filters": int(raw.numel()),
+            "per_task_reset_count": reset_count,
+            "active_rounds_until_next_refresh": int(
+                active_rounds_until_next_refresh
+            ),
+            "mean_raw_q": float(raw.mean()),
+            "median_raw_q": float(raw.median()),
+            "max_raw_q": float(raw.max()),
+            "mean_jackknife_se": float(se.mean()),
+            "median_jackknife_se": float(se.median()),
+            "max_jackknife_se": float(se.max()),
+            "within_layer_se_std": float(se.std(unbiased=False)),
+            "mean_adjusted_s": float(adjusted.mean()),
+            "median_adjusted_s": float(adjusted.median()),
+            "max_adjusted_s": float(adjusted.max()),
+            "mean_q_minus_s": float((raw - adjusted).mean()),
+            "fraction_s_less_than_q": float((adjusted < raw).double().mean()),
+            "fraction_s_zero": float((adjusted == 0).double().mean()),
+            "mean_eligible_clients": float(eligible.mean()),
+            "min_eligible_clients": int(eligible.min()),
+            "max_eligible_clients": int(eligible.max()),
+            "pearson_q_vs_s": score_correlation(raw, adjusted),
+            "spearman_q_vs_s": _spearman_correlation(raw, adjusted),
+            "top_reset_count_overlap": _top_score_overlap(
+                raw, adjusted, reset_count
+            ),
+            "corr_se_vs_eligible_clients": score_correlation(se, eligible),
+            "corr_se_vs_q": score_correlation(se, raw),
+            "raw_q_sampling_entropy": raw_distribution["entropy"],
+            "raw_q_entropy_gap_from_uniform": raw_distribution[
+                "entropy_gap_from_uniform"
+            ],
+            "raw_q_max_probability_over_uniform": raw_distribution[
+                "max_probability_over_uniform"
+            ],
+            "jsc_sampling_entropy": adjusted_distribution["entropy"],
+            "jsc_entropy_gap_from_uniform": adjusted_distribution[
+                "entropy_gap_from_uniform"
+            ],
+            "jsc_max_probability_over_uniform": adjusted_distribution[
+                "max_probability_over_uniform"
+            ],
+        }
+        rows.append(row)
+        print(
+            f"JSC_SCORE round={round_number} layer={layer_name} "
+            f"mean_q={row['mean_raw_q']:.6f} "
+            f"mean_se={row['mean_jackknife_se']:.6f} "
+            f"mean_s={row['mean_adjusted_s']:.6f} "
+            f"rank_corr={row['spearman_q_vs_s']:.6f} "
+            f"raw_entropy={row['raw_q_sampling_entropy']:.6f} "
+            f"jsc_entropy={row['jsc_sampling_entropy']:.6f}",
+            flush=True,
+        )
+    return adjusted_weights, rows
+
+
 def _split_evaluation_dataset(dataset_test, args):
     """Create a deterministic validation/test split for checkpoint selection."""
     validation_samples = int(args.validation_samples)
@@ -562,6 +701,117 @@ def FedPhoenixRG(
 
     print_peak_accuracy(acc, args.algorithm)
     _write_training_metrics(args, metrics_rows)
+
+
+def FedPhoenixRGJSC(
+    net_glob,
+    dataset_train,
+    dataset_validation,
+    dataset_test,
+    dict_users,
+):
+    """FedPhoenixRG with one-jackknife-SE stability-calibrated guidance."""
+    if args.rg_interval < 2:
+        raise ValueError("rg_interval must be at least 2")
+    if not 0.0 <= args.rg_mix <= 1.0:
+        raise ValueError("rg_mix must be in [0, 1]")
+
+    net_glob.train()
+    acc = []
+    metrics_rows = []
+    args.density_local = 0.01
+    guidance = RepeatabilityGuidance(net_glob)
+    sampling_weights = None
+    diagnostic_path = _mechanism_diagnostic_path(args, "jsc_diagnostics")
+    open(diagnostic_path, "w", encoding="utf-8").close()
+
+    for iter in range(args.epochs):
+        round_start = time.perf_counter()
+        if args.density_local > 1 or args.density_local < 0:
+            args.density_local = 0
+
+        print('*' * 80)
+        print('Round {:3d}'.format(iter))
+        w_locals = []
+        lens = []
+        m = max(int(args.frac * args.num_users), 1)
+        idxs_users = np.random.choice(range(args.num_users), m, replace=False)
+        global_before_reset = {
+            key: value.detach().to(device="cpu", dtype=torch.float32).clone()
+            for key, value in net_glob.state_dict().items()
+            if key.endswith(".weight") and value.ndim == 4
+        }
+        task_models, task_traces = _build_fedphoenix_tasks(
+            net_glob, iter, m, args, sampling_weights=sampling_weights
+        )
+        assignments = []
+        for task_id, idx in enumerate(idxs_users):
+            net_local = copy.deepcopy(task_models[task_id]).to(args.device)
+            local = LocalUpdate_FedAvg(
+                args=args,
+                dataset=dataset_train,
+                idxs=dict_users[idx],
+                dataset_test=dataset_test,
+            )
+            w = local.train(net=net_local)
+            w_locals.append(copy.deepcopy(w))
+            lens.append(len(dict_users[idx]))
+            assignments.append({"client_id": int(idx), "task_id": int(task_id)})
+
+        guidance.observe_round(
+            global_before_reset, w_locals, idxs_users.tolist(), task_traces
+        )
+        del global_before_reset
+        w_glob = Aggregation(w_locals, lens)
+        net_glob.load_state_dict(w_glob)
+
+        refreshed = False
+        if (iter + 1) % args.rg_interval == 0:
+            raw_scores, adjusted_scores, jackknife_diagnostics = (
+                guidance.finalize_window_with_jackknife_stability()
+            )
+            sampling_weights, diagnostic_rows = _jsc_diagnostic_rows(
+                iter + 1,
+                raw_scores,
+                adjusted_scores,
+                jackknife_diagnostics,
+                args,
+            )
+            _append_jsonl(diagnostic_path, diagnostic_rows)
+            guidance.reset_window()
+            refreshed = True
+
+        round_train_seconds = time.perf_counter() - round_start
+        item_acc = evaluate_round_accuracy(
+            net_glob, dataset_test, args, iter + 1
+        )
+        acc.append(item_acc)
+        metrics_rows.append(
+            {
+                "round": int(iter + 1),
+                "algorithm": args.algorithm,
+                "seed": int(args.seed),
+                "test_accuracy": item_acc,
+                "round_train_seconds": float(round_train_seconds),
+                "matching_seconds": 0.0,
+                "selected_clients": json.dumps(
+                    [int(item) for item in idxs_users.tolist()]
+                ),
+                "assignments": json.dumps(assignments),
+                "task_seeds": json.dumps(
+                    [int(trace["seed"]) for trace in task_traces]
+                ),
+                "guidance_active": int(sampling_weights is not None),
+                "guidance_refreshed": int(refreshed),
+            }
+        )
+        del task_models
+        if args.device.type == "cuda":
+            torch.cuda.empty_cache()
+
+    print_peak_accuracy(acc, args.algorithm)
+    _write_training_metrics(args, metrics_rows)
+    print(f"JSC diagnostics saved to {diagnostic_path}")
 
 
 def FedPhoenixRGRGE(
@@ -2351,6 +2601,14 @@ if __name__ == '__main__':
         )
     elif args.algorithm == 'FedPhoenixRG':
         FedPhoenixRG(
+            net_glob,
+            dataset_train,
+            dataset_validation,
+            dataset_final_test,
+            dict_users,
+        )
+    elif args.algorithm == 'FedPhoenixRG-JSC':
+        FedPhoenixRGJSC(
             net_glob,
             dataset_train,
             dataset_validation,

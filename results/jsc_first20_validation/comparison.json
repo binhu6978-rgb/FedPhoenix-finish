@@ -1,0 +1,8 @@
+{
+  "rounds": 20,
+  "selected_clients_match": true,
+  "task_seeds_match": true,
+  "round_accuracies_match": true,
+  "maximum_accuracy_difference": 0.0,
+  "reference_metrics": "results\\training_metrics\\cifar10_vgg_FedPhoenixRG_seed1_paired1200_rg_mix075.csv"
+}

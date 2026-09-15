@@ -178,6 +178,93 @@ class RepeatabilityGuidance:
         return {name: dict(values) for name, values in self._diagnostics.items()}
 
     @torch.no_grad()
+    def finalize_window_with_jackknife_stability(self):
+        """Return raw q and its leave-one-eligible-client-out stability penalty.
+
+        The raw score is produced by the unchanged ``finalize_window`` path.
+        The added calculation only asks how sensitive that score is to the
+        composition of eligible clients; it does not reinterpret q as reset
+        utility and does not sample any randomness.
+        """
+        raw_scores = self.finalize_window()
+        adjusted_scores = {}
+        diagnostics = {}
+        for layer_name, _state_key, output_filters in self.layers:
+            repeat_sum = torch.zeros(output_filters, dtype=torch.float64)
+            energy_sum = torch.zeros(output_filters, dtype=torch.float64)
+            eligible_clients = torch.zeros(output_filters, dtype=torch.long)
+            contributions = []
+            for client_stats in self._stats.values():
+                stats = client_stats.get(layer_name)
+                if stats is None:
+                    continue
+                count = stats["count"]
+                eligible = count >= 2
+                if not bool(eligible.any()):
+                    continue
+                n = count[eligible].double()
+                pair_count = n * (n - 1.0) / 2.0
+                client_repeat = torch.zeros(output_filters, dtype=torch.float64)
+                client_energy = torch.zeros(output_filters, dtype=torch.float64)
+                client_repeat[eligible] = stats["pair_dot"][eligible] / pair_count
+                client_energy[eligible] = stats["energy_sum"][eligible] / n
+                repeat_sum += client_repeat
+                energy_sum += client_energy
+                eligible_clients[eligible] += 1
+                contributions.append((eligible, client_repeat, client_energy))
+
+            loo_sum = torch.zeros(output_filters, dtype=torch.float64)
+            loo_square_sum = torch.zeros(output_filters, dtype=torch.float64)
+            stable = eligible_clients >= 2
+            for eligible, client_repeat, client_energy in contributions:
+                usable = eligible & stable
+                if not bool(usable.any()):
+                    continue
+                denominator = eligible_clients[usable].double() - 1.0
+                repeat_without = (
+                    repeat_sum[usable] - client_repeat[usable]
+                ) / denominator
+                energy_without = (
+                    energy_sum[usable] - client_energy[usable]
+                ) / denominator
+                q_without = (
+                    repeat_without.clamp_min(0.0)
+                    / (energy_without + self.epsilon)
+                ).clamp_(0.0, 1.0)
+                loo_sum[usable] += q_without
+                loo_square_sum[usable] += q_without.square()
+
+            loo_mean = torch.zeros(output_filters, dtype=torch.float64)
+            loo_mean[stable] = (
+                loo_sum[stable] / eligible_clients[stable].double()
+            )
+            centered_square_sum = torch.zeros(
+                output_filters, dtype=torch.float64
+            )
+            centered_square_sum[stable] = (
+                loo_square_sum[stable]
+                - loo_sum[stable].square() / eligible_clients[stable].double()
+            ).clamp_min_(0.0)
+            jackknife_se = torch.zeros(output_filters, dtype=torch.float64)
+            m = eligible_clients[stable].double()
+            jackknife_se[stable] = (
+                ((m - 1.0) / m) * centered_square_sum[stable]
+            ).sqrt()
+
+            raw = raw_scores[layer_name].double()
+            adjusted = torch.zeros(output_filters, dtype=torch.float64)
+            adjusted[stable] = (
+                raw[stable] - jackknife_se[stable]
+            ).clamp_min_(0.0)
+            adjusted_scores[layer_name] = adjusted.float()
+            diagnostics[layer_name] = {
+                "jackknife_se": jackknife_se.clone(),
+                "eligible_clients": eligible_clients.clone(),
+                "loo_mean_q": loo_mean.clone(),
+            }
+        return raw_scores, adjusted_scores, diagnostics
+
+    @torch.no_grad()
     def finalize_window_sample_weighted(self, client_sample_counts):
         """Finalize q with sample-weighted eligible-client aggregation only."""
         scores = {}
