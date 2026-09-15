@@ -265,6 +265,44 @@ class RepeatabilityGuidance:
         return raw_scores, adjusted_scores, diagnostics
 
     @torch.no_grad()
+    def finalize_window_with_components(self):
+        """Expose the existing client-balanced R and E behind unchanged raw q."""
+        raw_scores = self.finalize_window()
+        components = {}
+        for layer_name, _state_key, output_filters in self.layers:
+            repeat_sum = torch.zeros(output_filters, dtype=torch.float64)
+            energy_sum = torch.zeros(output_filters, dtype=torch.float64)
+            eligible_clients = torch.zeros(output_filters, dtype=torch.long)
+            for client_stats in self._stats.values():
+                stats = client_stats.get(layer_name)
+                if stats is None:
+                    continue
+                count = stats["count"]
+                eligible = count >= 2
+                if not bool(eligible.any()):
+                    continue
+                n = count[eligible].double()
+                pair_count = n * (n - 1.0) / 2.0
+                repeat_sum[eligible] += stats["pair_dot"][eligible] / pair_count
+                energy_sum[eligible] += stats["energy_sum"][eligible] / n
+                eligible_clients[eligible] += 1
+            present = eligible_clients > 0
+            repeatability = torch.zeros(output_filters, dtype=torch.float64)
+            energy = torch.zeros(output_filters, dtype=torch.float64)
+            repeatability[present] = (
+                repeat_sum[present] / eligible_clients[present].double()
+            )
+            energy[present] = (
+                energy_sum[present] / eligible_clients[present].double()
+            )
+            components[layer_name] = {
+                "repeatability": repeatability,
+                "energy": energy,
+                "eligible_clients": eligible_clients.clone(),
+            }
+        return raw_scores, components
+
+    @torch.no_grad()
     def finalize_window_sample_weighted(self, client_sample_counts):
         """Finalize q with sample-weighted eligible-client aggregation only."""
         scores = {}
@@ -481,6 +519,47 @@ def sampling_weights_from_scores(scores, mix, epsilon=1e-12):
             probability = (1.0 - mix) * uniform + mix * (score / total)
         weights[name] = probability
     return weights
+
+
+def deterministic_score_order(primary, raw_scores):
+    """Rank by descending primary, descending raw q, then filter index."""
+    primary = torch.as_tensor(primary, dtype=torch.float64).flatten()
+    raw_scores = torch.as_tensor(raw_scores, dtype=torch.float64).flatten()
+    if primary.shape != raw_scores.shape or primary.numel() == 0:
+        raise ValueError("ranking scores must be non-empty and aligned")
+    if not bool(torch.isfinite(primary).all()) or not bool(
+        torch.isfinite(raw_scores).all()
+    ):
+        raise ValueError("ranking scores must be finite")
+    return sorted(
+        range(primary.numel()),
+        key=lambda index: (
+            -float(primary[index]), -float(raw_scores[index]), index
+        ),
+    )
+
+
+def spectrum_preserving_rerank(raw_probabilities, alternative_scores, raw_scores):
+    """Reassign the exact raw probability multiset by alternative rank."""
+    reranked = {}
+    for name, raw_probability in raw_probabilities.items():
+        if name not in alternative_scores or name not in raw_scores:
+            raise ValueError(f"missing ranking score for layer {name}")
+        probability = torch.as_tensor(
+            raw_probability, dtype=torch.float64
+        ).flatten()
+        raw = torch.as_tensor(raw_scores[name], dtype=torch.float64).flatten()
+        alternative = torch.as_tensor(
+            alternative_scores[name], dtype=torch.float64
+        ).flatten()
+        if probability.shape != raw.shape or raw.shape != alternative.shape:
+            raise ValueError(f"probability and ranking shapes differ for {name}")
+        sorted_values = torch.sort(probability, descending=True).values
+        order = deterministic_score_order(alternative, raw)
+        assigned = torch.empty_like(probability)
+        assigned[torch.as_tensor(order, dtype=torch.long)] = sorted_values
+        reranked[name] = assigned
+    return reranked
 
 
 def score_correlation(first, second, epsilon=1e-12):

@@ -1,0 +1,13 @@
+{
+  "rounds": 20,
+  "sir_selected_clients_match": true,
+  "sir_task_seeds_match": true,
+  "sir_accuracies_match": true,
+  "rmr_selected_clients_match": true,
+  "rmr_task_seeds_match": true,
+  "rmr_accuracies_match": true,
+  "sir_rmr_prefix_identical": true,
+  "reset_assignments_match_current_best": true,
+  "reset_assignment_basis": "sampling_weights is None through round 20; identical task seeds use unchanged _build_fedphoenix_tasks/reset_kernels_for_task path",
+  "maximum_accuracy_difference": 0.0
+}

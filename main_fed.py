@@ -46,6 +46,7 @@ from Algorithm.timing_coverage_variants import (
     independent_counterfactual_traces,
 )
 from Algorithm.repeatability_guidance import (
+    deterministic_score_order,
     RepeatabilityGuidance,
     ResetRecoverabilityGuidance,
     layer_calibrated_sampling_weights,
@@ -53,6 +54,7 @@ from Algorithm.repeatability_guidance import (
     recovery_weighted_sampling_weights,
     sampling_weights_from_scores,
     score_correlation,
+    spectrum_preserving_rerank,
 )
 from Algorithm.RecoveryAware import (
     build_recovery_score_matrix,
@@ -360,6 +362,129 @@ def _jsc_diagnostic_rows(
             flush=True,
         )
     return adjusted_weights, rows
+
+
+def _reranking_diagnostic_rows(
+    round_number,
+    mode,
+    raw_scores,
+    alternative_scores,
+    raw_probabilities,
+    reranked_probabilities,
+    active_counts,
+    auxiliary,
+):
+    rows = []
+    for layer_name, reset_count in active_counts.items():
+        raw = torch.as_tensor(raw_scores[layer_name], dtype=torch.float64)
+        alternative = torch.as_tensor(
+            alternative_scores[layer_name], dtype=torch.float64
+        )
+        raw_probability = torch.as_tensor(
+            raw_probabilities[layer_name], dtype=torch.float64
+        )
+        new_probability = torch.as_tensor(
+            reranked_probabilities[layer_name], dtype=torch.float64
+        )
+        raw_order = deterministic_score_order(raw, raw)
+        alternative_order = deterministic_score_order(alternative, raw)
+        raw_top = torch.as_tensor(raw_order[:reset_count], dtype=torch.long)
+        alternative_top = torch.as_tensor(
+            alternative_order[:reset_count], dtype=torch.long
+        )
+        raw_distribution = _sampling_distribution_summary(raw_probability)
+        new_distribution = _sampling_distribution_summary(new_probability)
+        sorted_difference = float(
+            (
+                torch.sort(raw_probability).values
+                - torch.sort(new_probability).values
+            ).abs().max()
+        )
+        row = {
+            "event": f"{mode}_refresh",
+            "round": int(round_number),
+            "layer_name": layer_name,
+            "num_filters": int(raw.numel()),
+            "per_task_reset_count": int(reset_count),
+            "mean_raw_q": float(raw.mean()),
+            "median_raw_q": float(raw.median()),
+            "max_raw_q": float(raw.max()),
+            "mean_alternative_score": float(alternative.mean()),
+            "median_alternative_score": float(alternative.median()),
+            "max_alternative_score": float(alternative.max()),
+            "pearson_raw_q_vs_alternative": score_correlation(raw, alternative),
+            "spearman_raw_q_vs_alternative": _spearman_correlation(
+                raw, alternative
+            ),
+            "top_reset_count_overlap": _top_score_overlap(
+                raw, alternative, reset_count
+            ),
+            "fraction_ranking_positions_changed": sum(
+                first != second
+                for first, second in zip(raw_order, alternative_order)
+            ) / raw.numel(),
+            "raw_probability_entropy": raw_distribution["entropy"],
+            "new_probability_entropy": new_distribution["entropy"],
+            "raw_entropy_gap_from_uniform": raw_distribution[
+                "entropy_gap_from_uniform"
+            ],
+            "new_entropy_gap_from_uniform": new_distribution[
+                "entropy_gap_from_uniform"
+            ],
+            "raw_max_probability_over_uniform": raw_distribution[
+                "max_probability_over_uniform"
+            ],
+            "new_max_probability_over_uniform": new_distribution[
+                "max_probability_over_uniform"
+            ],
+            "max_sorted_probability_absolute_difference": sorted_difference,
+        }
+        if mode == "sir":
+            se = torch.as_tensor(
+                auxiliary[layer_name]["jackknife_se"], dtype=torch.float64
+            )
+            row.update({
+                "mean_jackknife_se": float(se.mean()),
+                "median_jackknife_se": float(se.median()),
+                "max_jackknife_se": float(se.max()),
+                "corr_se_vs_q": score_correlation(se, raw),
+            })
+        else:
+            repeatability = torch.as_tensor(
+                auxiliary[layer_name]["repeatability"], dtype=torch.float64
+            ).clamp_min(0.0)
+            energy = torch.as_tensor(
+                auxiliary[layer_name]["energy"], dtype=torch.float64
+            )
+            row.update({
+                "pearson_q_vs_positive_r": score_correlation(raw, repeatability),
+                "spearman_q_vs_positive_r": _spearman_correlation(
+                    raw, repeatability
+                ),
+                "corr_q_vs_energy": score_correlation(raw, energy),
+                "corr_positive_r_vs_energy": score_correlation(
+                    repeatability, energy
+                ),
+                "raw_top_mean_energy": float(energy[raw_top].mean()),
+                "raw_top_mean_positive_r": float(
+                    repeatability[raw_top].mean()
+                ),
+                "raw_top_mean_q": float(raw[raw_top].mean()),
+                "rmr_top_mean_energy": float(energy[alternative_top].mean()),
+                "rmr_top_mean_positive_r": float(
+                    repeatability[alternative_top].mean()
+                ),
+                "rmr_top_mean_q": float(raw[alternative_top].mean()),
+            })
+        rows.append(row)
+        print(
+            f"{mode.upper()}_SCORE round={round_number} layer={layer_name} "
+            f"rank_corr={row['spearman_raw_q_vs_alternative']:.6f} "
+            f"top_overlap={row['top_reset_count_overlap']:.6f} "
+            f"spectrum_diff={sorted_difference:.3e}",
+            flush=True,
+        )
+    return rows
 
 
 def _split_evaluation_dataset(dataset_test, args):
@@ -812,6 +937,166 @@ def FedPhoenixRGJSC(
     print_peak_accuracy(acc, args.algorithm)
     _write_training_metrics(args, metrics_rows)
     print(f"JSC diagnostics saved to {diagnostic_path}")
+
+
+def FedPhoenixRGSpectrumReranked(
+    net_glob,
+    dataset_train,
+    dataset_validation,
+    dataset_test,
+    dict_users,
+    mode,
+):
+    """Run SIR or RMR while preserving the exact raw-q probability spectrum."""
+    if mode not in {"sir", "rmr"}:
+        raise ValueError("mode must be sir or rmr")
+    if args.rg_interval < 2:
+        raise ValueError("rg_interval must be at least 2")
+    if not 0.0 <= args.rg_mix <= 1.0:
+        raise ValueError("rg_mix must be in [0, 1]")
+
+    net_glob.train()
+    acc = []
+    metrics_rows = []
+    args.density_local = 0.01
+    guidance = RepeatabilityGuidance(net_glob)
+    sampling_weights = None
+    diagnostic_path = _mechanism_diagnostic_path(
+        args, f"{mode}_diagnostics"
+    )
+    open(diagnostic_path, "w", encoding="utf-8").close()
+
+    for iter in range(args.epochs):
+        round_start = time.perf_counter()
+        if args.density_local > 1 or args.density_local < 0:
+            args.density_local = 0
+
+        print('*' * 80)
+        print('Round {:3d}'.format(iter))
+        w_locals = []
+        lens = []
+        m = max(int(args.frac * args.num_users), 1)
+        idxs_users = np.random.choice(range(args.num_users), m, replace=False)
+        global_before_reset = {
+            key: value.detach().to(device="cpu", dtype=torch.float32).clone()
+            for key, value in net_glob.state_dict().items()
+            if key.endswith(".weight") and value.ndim == 4
+        }
+        task_models, task_traces = _build_fedphoenix_tasks(
+            net_glob, iter, m, args, sampling_weights=sampling_weights
+        )
+        assignments = []
+        for task_id, idx in enumerate(idxs_users):
+            net_local = copy.deepcopy(task_models[task_id]).to(args.device)
+            local = LocalUpdate_FedAvg(
+                args=args,
+                dataset=dataset_train,
+                idxs=dict_users[idx],
+                dataset_test=dataset_test,
+            )
+            w = local.train(net=net_local)
+            w_locals.append(copy.deepcopy(w))
+            lens.append(len(dict_users[idx]))
+            assignments.append({"client_id": int(idx), "task_id": int(task_id)})
+
+        guidance.observe_round(
+            global_before_reset, w_locals, idxs_users.tolist(), task_traces
+        )
+        del global_before_reset
+        w_glob = Aggregation(w_locals, lens)
+        net_glob.load_state_dict(w_glob)
+
+        refreshed = False
+        if (iter + 1) % args.rg_interval == 0:
+            if mode == "sir":
+                raw_scores, _adjusted, auxiliary = (
+                    guidance.finalize_window_with_jackknife_stability()
+                )
+                alternative_scores = {
+                    name: raw_scores[name].double()
+                    - auxiliary[name]["jackknife_se"]
+                    for name in raw_scores
+                }
+            else:
+                raw_scores, auxiliary = (
+                    guidance.finalize_window_with_components()
+                )
+                alternative_scores = {
+                    name: values["repeatability"].clamp_min(0.0)
+                    for name, values in auxiliary.items()
+                }
+            raw_probabilities = sampling_weights_from_scores(
+                raw_scores, args.rg_mix
+            )
+            sampling_weights = spectrum_preserving_rerank(
+                raw_probabilities, alternative_scores, raw_scores
+            )
+            active_counts = _active_fedphoenix_reset_counts(
+                guidance.layers, iter + 1, args
+            )
+            diagnostic_rows = _reranking_diagnostic_rows(
+                iter + 1,
+                mode,
+                raw_scores,
+                alternative_scores,
+                raw_probabilities,
+                sampling_weights,
+                active_counts,
+                auxiliary,
+            )
+            _append_jsonl(diagnostic_path, diagnostic_rows)
+            guidance.reset_window()
+            refreshed = True
+
+        round_train_seconds = time.perf_counter() - round_start
+        item_acc = evaluate_round_accuracy(
+            net_glob, dataset_test, args, iter + 1
+        )
+        acc.append(item_acc)
+        metrics_rows.append(
+            {
+                "round": int(iter + 1),
+                "algorithm": args.algorithm,
+                "seed": int(args.seed),
+                "test_accuracy": item_acc,
+                "round_train_seconds": float(round_train_seconds),
+                "matching_seconds": 0.0,
+                "selected_clients": json.dumps(
+                    [int(item) for item in idxs_users.tolist()]
+                ),
+                "assignments": json.dumps(assignments),
+                "task_seeds": json.dumps(
+                    [int(trace["seed"]) for trace in task_traces]
+                ),
+                "guidance_active": int(sampling_weights is not None),
+                "guidance_refreshed": int(refreshed),
+            }
+        )
+        del task_models
+        if args.device.type == "cuda":
+            torch.cuda.empty_cache()
+
+    print_peak_accuracy(acc, args.algorithm)
+    _write_training_metrics(args, metrics_rows)
+    print(f"{mode.upper()} diagnostics saved to {diagnostic_path}")
+
+
+def FedPhoenixRGSIR(
+    net_glob, dataset_train, dataset_validation, dataset_test, dict_users
+):
+    FedPhoenixRGSpectrumReranked(
+        net_glob, dataset_train, dataset_validation, dataset_test, dict_users,
+        mode="sir",
+    )
+
+
+def FedPhoenixRGRMR(
+    net_glob, dataset_train, dataset_validation, dataset_test, dict_users
+):
+    FedPhoenixRGSpectrumReranked(
+        net_glob, dataset_train, dataset_validation, dataset_test, dict_users,
+        mode="rmr",
+    )
 
 
 def FedPhoenixRGRGE(
@@ -2609,6 +2894,22 @@ if __name__ == '__main__':
         )
     elif args.algorithm == 'FedPhoenixRG-JSC':
         FedPhoenixRGJSC(
+            net_glob,
+            dataset_train,
+            dataset_validation,
+            dataset_final_test,
+            dict_users,
+        )
+    elif args.algorithm == 'FedPhoenixRG-SIR':
+        FedPhoenixRGSIR(
+            net_glob,
+            dataset_train,
+            dataset_validation,
+            dataset_final_test,
+            dict_users,
+        )
+    elif args.algorithm == 'FedPhoenixRG-RMR':
+        FedPhoenixRGRMR(
             net_glob,
             dataset_train,
             dataset_validation,
